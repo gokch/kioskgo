@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "/types";
+
+import "file.proto";
+
+service FileService {
+    rpc Upload(UploadReq) returns (UploadResp) {}
+
+}
+
+message UploadReq {
+    File file = 1;
+}
+
+message UploadResp {
+    string message = 1;
+    uint64 code = 2;
+}

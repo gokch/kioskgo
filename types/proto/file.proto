@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "/types";
+
+message File {
+    bytes id = 1;
+    bytes raw = 2;
+    repeated Host hosts = 3;
+    FileMetadata metadata = 4;
+}
+
+message Host {
+    bytes id = 1;
+    string host = 2;
+}
+
+message FileMetadata {
+    uint64 size = 1;
+    uint32 timestamp = 2;
+    uint32 fee = 3;
+    string comment = 4;
+}
