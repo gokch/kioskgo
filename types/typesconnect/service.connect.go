@@ -27,7 +27,8 @@ const (
 
 // FileServiceClient is a client for the proto.FileService service.
 type FileServiceClient interface {
-	Upload(context.Context, *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadResp], error)
+	Upload(context.Context, *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadRes], error)
+	Download(context.Context, *connect_go.Request[types.DownloadReq]) (*connect_go.Response[types.DownloadRes], error)
 }
 
 // NewFileServiceClient constructs a client for the proto.FileService service. By default, it uses
@@ -40,9 +41,14 @@ type FileServiceClient interface {
 func NewFileServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) FileServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &fileServiceClient{
-		upload: connect_go.NewClient[types.UploadReq, types.UploadResp](
+		upload: connect_go.NewClient[types.UploadReq, types.UploadRes](
 			httpClient,
 			baseURL+"/proto.FileService/Upload",
+			opts...,
+		),
+		download: connect_go.NewClient[types.DownloadReq, types.DownloadRes](
+			httpClient,
+			baseURL+"/proto.FileService/Download",
 			opts...,
 		),
 	}
@@ -50,17 +56,24 @@ func NewFileServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts
 
 // fileServiceClient implements FileServiceClient.
 type fileServiceClient struct {
-	upload *connect_go.Client[types.UploadReq, types.UploadResp]
+	upload   *connect_go.Client[types.UploadReq, types.UploadRes]
+	download *connect_go.Client[types.DownloadReq, types.DownloadRes]
 }
 
 // Upload calls proto.FileService.Upload.
-func (c *fileServiceClient) Upload(ctx context.Context, req *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadResp], error) {
+func (c *fileServiceClient) Upload(ctx context.Context, req *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadRes], error) {
 	return c.upload.CallUnary(ctx, req)
+}
+
+// Download calls proto.FileService.Download.
+func (c *fileServiceClient) Download(ctx context.Context, req *connect_go.Request[types.DownloadReq]) (*connect_go.Response[types.DownloadRes], error) {
+	return c.download.CallUnary(ctx, req)
 }
 
 // FileServiceHandler is an implementation of the proto.FileService service.
 type FileServiceHandler interface {
-	Upload(context.Context, *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadResp], error)
+	Upload(context.Context, *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadRes], error)
+	Download(context.Context, *connect_go.Request[types.DownloadReq]) (*connect_go.Response[types.DownloadRes], error)
 }
 
 // NewFileServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -75,12 +88,21 @@ func NewFileServiceHandler(svc FileServiceHandler, opts ...connect_go.HandlerOpt
 		svc.Upload,
 		opts...,
 	))
+	mux.Handle("/proto.FileService/Download", connect_go.NewUnaryHandler(
+		"/proto.FileService/Download",
+		svc.Download,
+		opts...,
+	))
 	return "/proto.FileService/", mux
 }
 
 // UnimplementedFileServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedFileServiceHandler struct{}
 
-func (UnimplementedFileServiceHandler) Upload(context.Context, *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadResp], error) {
+func (UnimplementedFileServiceHandler) Upload(context.Context, *connect_go.Request[types.UploadReq]) (*connect_go.Response[types.UploadRes], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("proto.FileService.Upload is not implemented"))
+}
+
+func (UnimplementedFileServiceHandler) Download(context.Context, *connect_go.Request[types.DownloadReq]) (*connect_go.Response[types.DownloadRes], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("proto.FileService.Download is not implemented"))
 }
