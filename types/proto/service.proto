@@ -6,15 +6,23 @@ option go_package = "/types";
 import "file.proto";
 
 service FileService {
-    rpc Upload(UploadReq) returns (UploadResp) {}
-
+    rpc Upload(UploadReq) returns (UploadRes) {}
+    rpc Download(DownloadReq) returns (DownloadRes) {}
 }
 
 message UploadReq {
     File file = 1;
 }
 
-message UploadResp {
+message UploadRes {
     string message = 1;
     uint64 code = 2;
+}
+
+message DownloadReq {
+
+}
+
+message DownloadRes {
+    File file = 1;
 }
