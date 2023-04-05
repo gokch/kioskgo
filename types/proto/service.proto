@@ -3,26 +3,41 @@ syntax = "proto3";
 package proto;
 option go_package = "/types";
 
+import "account.proto";
 import "file.proto";
 
 service FileService {
-    rpc Upload(UploadReq) returns (UploadRes) {}
-    rpc Download(DownloadReq) returns (DownloadRes) {}
+    rpc Upload(UploadRequest) returns (UploadResponse) {}
+    rpc Download(DownloadRequest) returns (DownloadResponse) {}
 }
 
-message UploadReq {
-    File file = 1;
-}
-
-message UploadRes {
-    string message = 1;
+message Response {
+    string status = 1;
     uint64 code = 2;
 }
 
-message DownloadReq {
-
+message RegisterRequest {
+    Account account = 1;
 }
 
-message DownloadRes {
-    File file = 1;
+message RegisterResponse {
+    Responseponse Response = 1;
+}
+
+message UploadRequest {
+    Account account = 1;
+    File file = 2;
+}
+
+message UploadResponse {
+    Responseponse Response = 1;
+}
+
+message DownloadRequest {
+    Account account = 1;
+}
+
+message DownloadResponse {
+    Responseponse Responsep = 1;
+    File file = 2;
 }

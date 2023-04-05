@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/ipfs/kubo/repo/fsrepo"
 	"github.com/spf13/afero"
 )
 
@@ -21,6 +22,7 @@ func NewFileSystem(root string) *FileSystem {
 type FileSystem struct {
 	root string
 	iofs afero.IOFS
+	repo fsrepo.FSRepo
 
 	bufsize int
 }
@@ -32,7 +34,8 @@ func (f *FileSystem) Init(root string) error {
 	if err != nil {
 		return err
 	}
-	f.bufsize = 1024 // 1kb
+
+	f.bufsize = 1024 * 1024 * 4 // 4kb
 	return nil
 }
 
@@ -40,6 +43,7 @@ func (f *FileSystem) Add(path string, name string, reader io.Reader) error {
 	fullpath := filepath.Join(f.root, path)
 	filepath := filepath.Join(fullpath, name)
 
+	f.repo.FileManager()
 	err := f.iofs.MkdirAll(fullpath, 0755)
 	if err != nil {
 		return err
