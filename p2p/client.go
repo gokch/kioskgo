@@ -4,18 +4,20 @@ import (
 	"context"
 
 	"github.com/gokch/kioskgo/file"
-	bsclient "github.com/ipfs/boxo/bitswap/client"
-	bsnet "github.com/ipfs/boxo/bitswap/network"
-	"github.com/ipfs/boxo/blockservice"
-	"github.com/ipfs/boxo/blockstore"
-	"github.com/ipfs/boxo/ipld/merkledag"
-	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
+
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
+
+	bsclient "github.com/ipfs/boxo/bitswap/client"
+	bsnet "github.com/ipfs/boxo/bitswap/network"
+	"github.com/ipfs/boxo/blockservice"
+	"github.com/ipfs/boxo/blockstore"
+	"github.com/ipfs/boxo/ipld/merkledag"
+	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 )
 
 type P2PClient struct {

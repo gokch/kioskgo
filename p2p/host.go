@@ -22,7 +22,7 @@ func makeHost(address string, listenPort int) (host host.Host, err error) {
 			libp2p.ListenAddrs(peerAddr.Addrs...),
 		}
 	} else { // generate new host
-		priv, _, err := crypto.GenerateKeyPairWithReader(crypto.Ed25519, 2048, rand.Reader)
+		priv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, rand.Reader)
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +41,8 @@ func makeHost(address string, listenPort int) (host host.Host, err error) {
 	return host, nil
 }
 
-func GetHostAddress(host host.Host) string {
+func getHostAddress(host host.Host) string {
 	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", host.ID().String()))
-	return host.Addrs()[0].Encapsulate(hostAddr).String()
+	addr := host.Addrs()[0]
+	return addr.Encapsulate(hostAddr).String()
 }

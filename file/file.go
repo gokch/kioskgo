@@ -14,10 +14,7 @@ type FileStore struct {
 }
 
 func NewFileStore(rootPath string) *FileStore {
-	err := os.MkdirAll(rootPath, 0755)
-	if err != nil {
-		panic(err)
-	}
+	os.MkdirAll(rootPath, 0755)
 
 	return &FileStore{
 		rootPath: rootPath,

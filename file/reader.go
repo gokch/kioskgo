@@ -2,6 +2,7 @@ package file
 
 import (
 	"bytes"
+	"os"
 
 	"github.com/ipfs/boxo/files"
 )
@@ -10,9 +11,28 @@ type Reader struct {
 	*files.ReaderFile
 }
 
+func NewReaderFromPath(path string) *Reader {
+	open, err := os.Open(path)
+	if err != nil {
+		return nil
+	}
+
+	stat, err := os.Stat(path)
+	if err != nil {
+		return nil
+	}
+
+	reader, err := files.NewReaderPathFile(path, open, stat)
+	if err != nil {
+		return nil
+	}
+
+	return NewReader(reader)
+}
+
 func NewReaderFromBytes(bt []byte) *Reader {
 	reader := files.NewReaderFile(bytes.NewReader(bt)).(*files.ReaderFile)
-	return &Reader{reader}
+	return NewReader(reader)
 }
 
 func NewReader(reader *files.ReaderFile) *Reader {

@@ -4,21 +4,22 @@ import (
 	"context"
 
 	"github.com/gokch/kioskgo/file"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-datastore"
+	dsync "github.com/ipfs/go-datastore/sync"
+	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/multiformats/go-multicodec"
+
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	bsserver "github.com/ipfs/boxo/bitswap/server"
 	"github.com/ipfs/boxo/blockservice"
 	"github.com/ipfs/boxo/blockstore"
 	chunker "github.com/ipfs/boxo/chunker"
+	offline "github.com/ipfs/boxo/exchange/offline"
 	"github.com/ipfs/boxo/ipld/merkledag"
 	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
-	"github.com/ipfs/go-cid"
-	"github.com/ipfs/go-datastore"
-	dsync "github.com/ipfs/go-datastore/sync"
-	offline "github.com/ipfs/go-ipfs-exchange-offline"
-	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
-	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/multiformats/go-multicodec"
 )
 
 type P2PServer struct {
@@ -55,17 +56,21 @@ func NewP2PServer(ctx context.Context, address string, fs *file.FileStore) (*P2P
 		return nil, err
 	}
 	bsn := bsnet.NewFromIpfsHost(host, routinghelpers.Null{})
-	bss := bsserver.New(ctx, bsn, blockstore.NewBlockstore(datastore.NewNullDatastore()))
-	bsn.Start(bss)
+	bss := bsserver.New(ctx, bsn, bs)
 
 	return &P2PServer{
-		Address: GetHostAddress(host),
+		Address: getHostAddress(host),
 		host:    host,
 		bsn:     bsn,
 		bss:     bss,
 		builder: params,
 		fs:      fs,
 	}, nil
+}
+
+func (p *P2PServer) Start() error {
+	p.bsn.Start(p.bss)
+	return nil
 }
 
 func (p *P2PServer) Close() error {
