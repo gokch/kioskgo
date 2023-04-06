@@ -6,16 +6,16 @@ import (
 	"github.com/gokch/kioskgo/file"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	bsserver "github.com/ipfs/boxo/bitswap/server"
+	"github.com/ipfs/boxo/blockstore"
 	chunker "github.com/ipfs/boxo/chunker"
+	"github.com/ipfs/boxo/ipld/merkledag"
 	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
 	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
-	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	offline "github.com/ipfs/go-ipfs-exchange-offline"
-	"github.com/ipfs/go-merkledag"
 	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/multiformats/go-multicodec"
@@ -74,7 +74,7 @@ func (p *P2PServer) Close() error {
 }
 
 func (p *P2PServer) Upload(ctx context.Context, reader *file.Reader) (cid.Cid, error) {
-	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(reader, chunker.DefaultBlockSize)) // Split the file up into fixed sized 256KiB chunks
+	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(reader.ReaderFile, chunker.DefaultBlockSize)) // Split the file up into fixed sized 256KiB chunks
 	if err != nil {
 		return cid.Undef, err
 	}

@@ -35,7 +35,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 		return
 	}
 	defer client.Close()
-	err = client.Connect(cmd.Context(), "/ip4/127.0.0.1/tcp/1607/p2p/12D3KooWHq35S2aGStH1kG4LH99TEi8SBLUvbanVJADRoBUNPDcP")
+	err = client.Connect(cmd.Context(), "/ip4/127.0.0.1/tcp/56646/p2p/12D3KooWNTAzUSEEGEyjUZwPCFKkywWhCRNEzf59smunYcGj1wuq")
 	if err != nil {
 		fmt.Println(err)
 		return
