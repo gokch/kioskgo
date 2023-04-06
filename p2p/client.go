@@ -1,18 +1,17 @@
 package p2p
 
 import (
-	"bytes"
 	"context"
-	"io"
 
+	"github.com/gokch/kioskgo/file"
 	bsclient "github.com/ipfs/boxo/bitswap/client"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
+	"github.com/ipfs/boxo/files"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
-	files "github.com/ipfs/go-ipfs-files"
 	"github.com/ipfs/go-merkledag"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -24,9 +23,11 @@ type P2PClient struct {
 	Address  string
 	host     host.Host
 	bsClient *bsclient.Client
+
+	fileStore file.FileStore
 }
 
-func NewP2PClient(ctx context.Context, address string) (*P2PClient, error) {
+func NewP2PClient(ctx context.Context, address string, fileStore file.FileStore) (*P2PClient, error) {
 	host, address, err := makeHost(address, 3000)
 	if err != nil {
 		return nil, err
@@ -36,9 +37,10 @@ func NewP2PClient(ctx context.Context, address string) (*P2PClient, error) {
 	bitSwapNetwork.Start(bswap)
 
 	return &P2PClient{
-		Address:  address,
-		host:     host,
-		bsClient: bswap,
+		Address:   address,
+		host:      host,
+		bsClient:  bswap,
+		fileStore: fileStore,
 	}, nil
 }
 
@@ -78,26 +80,23 @@ func (p *P2PClient) Disconnect(ctx context.Context, targetPeer string) error {
 	return p.host.ConnManager().Close()
 }
 
-func (p *P2PClient) Download(ctx context.Context, ci cid.Cid) ([]byte, error) {
+func (p *P2PClient) Download(ctx context.Context, ci cid.Cid, path string) error {
 	// conn manager 가 살아있을 때만 download
 	dserv := merkledag.NewReadOnlyDagService(
 		merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(datastore.NewNullDatastore()), p.bsClient))))
 	node, err := dserv.Get(ctx, ci)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	unixFSNode, err := unixfile.NewUnixfsFile(ctx, dserv, node)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var buf bytes.Buffer
-	if f, ok := unixFSNode.(files.File); ok {
-		if _, err := io.Copy(&buf, f); err != nil {
-			return nil, err
-		}
-	}
+	return p.fileStore.Put(path, unixFSNode)
+}
 
-	return buf.Bytes(), nil
+func (p *P2PClient) Upload(ctx context.Context, ci cid.Cid, path, name string, data *files.ReaderFile) error {
+	return nil
 }

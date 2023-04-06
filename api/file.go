@@ -13,12 +13,12 @@ var _ typesconnect.FileServiceClient = (*FileServiceApi)(nil)
 
 func NewFileServiceApi(rootPath string) *FileServiceApi {
 	return &FileServiceApi{
-		fs: file.NewFileSystem(rootPath),
+		fs: file.NewFileStore(rootPath),
 	}
 }
 
 type FileServiceApi struct {
-	fs *file.FileSystem
+	fs *file.FileStore
 }
 
 func (f *FileServiceApi) Upload(ctx context.Context, req *connect.Request[types.UploadReq]) (*connect.Response[types.UploadRes], error) {

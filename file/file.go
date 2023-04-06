@@ -1,78 +1,83 @@
 package file
 
 import (
-	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
-	"github.com/ipfs/kubo/repo/fsrepo"
-	"github.com/spf13/afero"
+	"github.com/ipfs/boxo/files"
 )
 
-func NewFileSystem(root string) *FileSystem {
-	fs := &FileSystem{}
-	err := fs.Init(root)
+type FileStore struct {
+	mtx      *sync.Mutex
+	rootPath string
+}
+
+func NewFileStore(rootPath string) *FileStore {
+	err := os.MkdirAll(rootPath, 0755)
 	if err != nil {
-		// TODO : add logger
-		return nil
+		panic(err)
 	}
-	return fs
+
+	return &FileStore{
+		rootPath: rootPath,
+		mtx:      &sync.Mutex{},
+	}
 }
 
-type FileSystem struct {
-	root string
-	iofs afero.IOFS
-	repo fsrepo.FSRepo
-
-	bufsize int
-}
-
-func (f *FileSystem) Init(root string) error {
-	f.root = root
-	f.iofs = afero.NewIOFS(afero.NewOsFs())
-	err := f.iofs.MkdirAll(f.root, 0755)
+func (f *FileStore) Overwrite(path string, node files.Node) error {
+	exist, err := f.Exist(path)
 	if err != nil {
 		return err
-	}
-
-	f.bufsize = 1024 * 1024 * 4 // 4kb
-	return nil
-}
-
-func (f *FileSystem) Add(path string, name string, reader io.Reader) error {
-	fullpath := filepath.Join(f.root, path)
-	filepath := filepath.Join(fullpath, name)
-
-	f.repo.FileManager()
-	err := f.iofs.MkdirAll(fullpath, 0755)
-	if err != nil {
-		return err
-	}
-
-	return afero.WriteReader(f.iofs.Fs, filepath, reader)
-}
-
-func (f *FileSystem) Get(path string, name string) (io.Reader, error) {
-	fullpath := filepath.Join(f.root, path)
-	filepath := filepath.Join(fullpath, name)
-
-	return f.iofs.Fs.Open(filepath)
-}
-
-func (f *FileSystem) Iterate(path string, fn func(reader io.Reader) error) error {
-	fullpath := filepath.Join(f.root, path)
-
-	return afero.Walk(f.iofs.Fs, fullpath, func(path string, info os.FileInfo, err error) error {
+	} else if exist {
+		err = f.Delete(path)
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
-			file, err := f.iofs.Fs.Open(path)
-			if err != nil {
-				return nil
-			}
-			return fn(file)
+	}
+
+	return f.Put(path, node)
+}
+
+func (f *FileStore) Put(path string, node files.Node) error {
+	fileName := filepath.Join(f.rootPath, path)
+	filePath := filepath.Dir(fileName)
+	err := os.MkdirAll(filePath, 0755)
+	if err != nil {
+		return err
+	}
+
+	return files.WriteTo(node, fileName)
+}
+
+// read from specific path using boxo/files
+func (f *FileStore) Get(path string) (*files.ReaderFile, error) {
+	fileName := filepath.Join(f.rootPath, path)
+	stat, err := os.Stat(fileName)
+	if err != nil {
+		return nil, err
+	}
+
+	node, err := files.NewSerialFile(fileName, true, stat)
+	if err != nil {
+		return nil, err
+	}
+	return node.(*files.ReaderFile), nil
+}
+
+func (f *FileStore) Exist(path string) (bool, error) {
+	fileName := filepath.Join(f.rootPath, path)
+	_, err := os.Stat(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
 		}
-		return nil
-	})
+		return false, err
+	}
+	return true, nil
+}
+
+func (f *FileStore) Delete(path string) error {
+	fileName := filepath.Join(f.rootPath, path)
+	return os.Remove(fileName)
 }

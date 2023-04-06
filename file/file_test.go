@@ -1,26 +1,24 @@
 package file
 
 import (
-	"bytes"
 	"io"
 	"testing"
 
+	"github.com/ipfs/boxo/files"
 	"github.com/stretchr/testify/require"
 )
 
-func TestFileNew(t *testing.T) {
-	fs := NewFileSystem("rootpath")
+func TestIPFSFileNew(t *testing.T) {
+	fs := NewFileStore("rootpath")
 	require.NotNil(t, fs)
 
 	data1 := []byte("test")
-	err := fs.Add("test/abc/d", "filename2", bytes.NewBuffer(data1))
+	err := fs.Overwrite("test/abc/d/e.jpg", files.NewBytesFile(data1))
 	require.NoError(t, err)
 
-	file, err := fs.Get("test/abc/d", "filename2")
+	reader, err := fs.Get("test/abc/d/e.jpg")
 	require.NoError(t, err)
 
-	data2, err := io.ReadAll(file)
-	require.NoError(t, err)
-
+	data2, err := io.ReadAll(reader)
 	require.Equal(t, data1, data2)
 }
