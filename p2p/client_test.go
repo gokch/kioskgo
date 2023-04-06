@@ -1,12 +1,10 @@
 package p2p
 
 import (
-	"bytes"
 	"context"
 	"testing"
 
 	"github.com/gokch/kioskgo/file"
-	"github.com/ipfs/boxo/files"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,8 +16,7 @@ func TestP2P(t *testing.T) {
 	server, err := NewP2PServer(ctx, "", fs1)
 	require.NoError(t, err)
 
-	readerFile := files.NewReaderFile(bytes.NewReader([]byte("test"))).(*files.ReaderFile)
-	cid, err := server.Upload(ctx, readerFile)
+	cid, err := server.Upload(ctx, file.NewReaderFromBytes([]byte("test")))
 	defer server.Close()
 
 	fullAddr := GetHostAddress(server.host)

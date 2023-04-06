@@ -6,7 +6,6 @@ import (
 	"github.com/gokch/kioskgo/file"
 	bsclient "github.com/ipfs/boxo/bitswap/client"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
-	"github.com/ipfs/boxo/files"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
@@ -94,10 +93,10 @@ func (p *P2PClient) Download(ctx context.Context, ci cid.Cid, path string) error
 		return err
 	}
 
-	return p.fs.Put(path, unixFSNode)
+	return p.fs.Put(path, file.NewWriter(unixFSNode))
 }
 
-func (p *P2PClient) Upload(ctx context.Context, ci cid.Cid, path, name string, data *files.ReaderFile) error {
+func (p *P2PClient) Upload(ctx context.Context, ci cid.Cid, path, name string, data *file.Reader) error {
 
 	return nil
 }

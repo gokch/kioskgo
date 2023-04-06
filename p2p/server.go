@@ -7,7 +7,6 @@ import (
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	bsserver "github.com/ipfs/boxo/bitswap/server"
 	chunker "github.com/ipfs/boxo/chunker"
-	"github.com/ipfs/boxo/files"
 	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
 	"github.com/ipfs/go-blockservice"
@@ -23,6 +22,7 @@ import (
 )
 
 type P2PServer struct {
+	Address string
 	host    host.Host
 	bss     *bsserver.Server
 	bsn     bsnet.BitSwapNetwork
@@ -59,6 +59,7 @@ func NewP2PServer(ctx context.Context, address string, fs *file.FileStore) (*P2P
 	bsn.Start(bss)
 
 	return &P2PServer{
+		Address: GetHostAddress(host),
 		host:    host,
 		bsn:     bsn,
 		bss:     bss,
@@ -72,7 +73,7 @@ func (p *P2PServer) Close() error {
 	return nil
 }
 
-func (p *P2PServer) Upload(ctx context.Context, reader *files.ReaderFile) (cid.Cid, error) {
+func (p *P2PServer) Upload(ctx context.Context, reader *file.Reader) (cid.Cid, error) {
 	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(reader, chunker.DefaultBlockSize)) // Split the file up into fixed sized 256KiB chunks
 	if err != nil {
 		return cid.Undef, err

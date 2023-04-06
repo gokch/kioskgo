@@ -25,7 +25,7 @@ func NewFileStore(rootPath string) *FileStore {
 	}
 }
 
-func (f *FileStore) Overwrite(path string, node files.Node) error {
+func (f *FileStore) Overwrite(path string, writer *Writer) error {
 	exist, err := f.Exist(path)
 	if err != nil {
 		return err
@@ -36,10 +36,10 @@ func (f *FileStore) Overwrite(path string, node files.Node) error {
 		}
 	}
 
-	return f.Put(path, node)
+	return f.Put(path, writer)
 }
 
-func (f *FileStore) Put(path string, node files.Node) error {
+func (f *FileStore) Put(path string, writer *Writer) error {
 	fileName := filepath.Join(f.rootPath, path)
 	filePath := filepath.Dir(fileName)
 	err := os.MkdirAll(filePath, 0755)
@@ -47,11 +47,11 @@ func (f *FileStore) Put(path string, node files.Node) error {
 		return err
 	}
 
-	return files.WriteTo(node, fileName)
+	return files.WriteTo(writer.Node, fileName)
 }
 
 // read from specific path using boxo/files
-func (f *FileStore) Get(path string) (*files.ReaderFile, error) {
+func (f *FileStore) Get(path string) (*Reader, error) {
 	fileName := filepath.Join(f.rootPath, path)
 	stat, err := os.Stat(fileName)
 	if err != nil {
@@ -62,7 +62,7 @@ func (f *FileStore) Get(path string) (*files.ReaderFile, error) {
 	if err != nil {
 		return nil, err
 	}
-	return node.(*files.ReaderFile), nil
+	return NewReader(node.(*files.ReaderFile)), nil
 }
 
 func (f *FileStore) Exist(path string) (bool, error) {

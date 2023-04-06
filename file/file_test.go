@@ -4,7 +4,6 @@ import (
 	"io"
 	"testing"
 
-	"github.com/ipfs/boxo/files"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +12,7 @@ func TestIPFSFileNew(t *testing.T) {
 	require.NotNil(t, fs)
 
 	data1 := []byte("test")
-	err := fs.Overwrite("test/abc/d/e.jpg", files.NewBytesFile(data1))
+	err := fs.Overwrite("test/abc/d/e.jpg", NewWriterFromBytes(data1))
 	require.NoError(t, err)
 
 	reader, err := fs.Get("test/abc/d/e.jpg")
