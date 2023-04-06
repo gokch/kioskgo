@@ -56,8 +56,8 @@ func (p *P2PServer) startDataServer(ctx context.Context, reader io.Reader) (cid.
 
 	// Start listening on the Bitswap protocol
 	// For this example we're not leveraging any content routing (DHT, IPNI, delegated routing requests, etc.) as we know the peer we are fetching from
-	n := bsnet.NewFromIpfsHost(p.P2PClient.host, routinghelpers.Null{})
-	p.bsServer = bsserver.New(ctx, n, bs)
-	n.Start(p.bsServer)
+	bitswapNetwork := bsnet.NewFromIpfsHost(p.P2PClient.host, routinghelpers.Null{})
+	p.bsServer = bsserver.New(ctx, bitswapNetwork, bs)
+	bitswapNetwork.Start(p.bsServer)
 	return nd.Cid(), nil
 }

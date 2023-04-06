@@ -52,27 +52,36 @@ func (p *P2PClient) Close() error {
 	return nil
 }
 
-func (p *P2PClient) Run(ctx context.Context, ci cid.Cid, targetPeer string) ([]byte, error) {
-	// Turn the targetPeer into a multiaddr.
+func (p *P2PClient) Connect(ctx context.Context, targetPeer string) error {
+	// conn manager 가 죽었을 때만 connect
 	maddr, err := multiaddr.NewMultiaddr(targetPeer)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	// Extract the peer ID from the multiaddr.
 	info, err := peer.AddrInfoFromP2pAddr(maddr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Directly connect to the peer that we know has the content
 	// Generally this peer will come from whatever content routing system is provided, however go-bitswap will also
 	// ask peers it is connected to for content so this will work
 	if err := p.host.Connect(ctx, *info); err != nil {
-		return nil, err
+		return err
 	}
 
-	dserv := merkledag.NewReadOnlyDagService(merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(datastore.NewNullDatastore()), p.bsClient))))
+	return nil
+}
+
+func (p *P2PClient) Disconnect(ctx context.Context, targetPeer string) error {
+	// connmanager 가 살아있을 때만 disconnect
+	return p.host.ConnManager().Close()
+}
+
+func (p *P2PClient) Download(ctx context.Context, ci cid.Cid) ([]byte, error) {
+	// conn manager 가 살아있을 때만 download
+	dserv := merkledag.NewReadOnlyDagService(
+		merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(datastore.NewNullDatastore()), p.bsClient))))
 	node, err := dserv.Get(ctx, ci)
 	if err != nil {
 		return nil, err
