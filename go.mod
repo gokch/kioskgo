@@ -12,7 +12,6 @@ require (
 	github.com/ipfs/go-ipfs-exchange-offline v0.3.0
 	github.com/ipfs/go-merkledag v0.10.0
 	github.com/libp2p/go-libp2p v0.26.4
-	github.com/libp2p/go-libp2p-core v0.20.1
 	github.com/libp2p/go-libp2p-routing-helpers v0.4.0
 	github.com/multiformats/go-multiaddr v0.8.0
 	github.com/multiformats/go-multicodec v0.8.1

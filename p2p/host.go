@@ -11,12 +11,12 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
-func makeHost(address string, listenPort int) (host host.Host, addr string, err error) {
+func makeHost(address string, listenPort int) (host host.Host, err error) {
 	var opts []libp2p.Option
 	if address != "" { // connect to existing host
 		peerAddr, err := peer.AddrInfoFromString(address)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		opts = []libp2p.Option{
 			libp2p.ListenAddrs(peerAddr.Addrs...),
@@ -24,7 +24,7 @@ func makeHost(address string, listenPort int) (host host.Host, addr string, err 
 	} else { // generate new host
 		priv, _, err := crypto.GenerateKeyPairWithReader(crypto.Ed25519, 2048, rand.Reader)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 
 		opts = []libp2p.Option{
@@ -35,10 +35,13 @@ func makeHost(address string, listenPort int) (host host.Host, addr string, err 
 
 	host, err = libp2p.New(opts...)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", host.ID().String()))
-	addr = host.Addrs()[0].Encapsulate(hostAddr).String()
 
-	return host, addr, nil
+	return host, nil
+}
+
+func GetHostAddress(host host.Host) string {
+	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", host.ID().String()))
+	return host.Addrs()[0].Encapsulate(hostAddr).String()
 }

@@ -13,39 +13,39 @@ import (
 	"github.com/ipfs/go-datastore"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/ipfs/go-merkledag"
-	"github.com/libp2p/go-libp2p-core/host"
-	"github.com/libp2p/go-libp2p-core/peer"
 	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
+	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 )
 
 type P2PClient struct {
-	Address  string
-	host     host.Host
-	bsClient *bsclient.Client
-
-	fileStore file.FileStore
+	host host.Host
+	bsn  bsnet.BitSwapNetwork
+	bsc  *bsclient.Client
+	fs   *file.FileStore
 }
 
-func NewP2PClient(ctx context.Context, address string, fileStore file.FileStore) (*P2PClient, error) {
-	host, address, err := makeHost(address, 3000)
+func NewP2PClient(ctx context.Context, address string, fs *file.FileStore) (*P2PClient, error) {
+	host, err := makeHost(address, 0)
 	if err != nil {
 		return nil, err
 	}
-	bitSwapNetwork := bsnet.NewFromIpfsHost(host, routinghelpers.Null{})
-	bswap := bsclient.New(ctx, bitSwapNetwork, blockstore.NewBlockstore(datastore.NewNullDatastore()))
-	bitSwapNetwork.Start(bswap)
+	bsn := bsnet.NewFromIpfsHost(host, routinghelpers.Null{})
+	bsc := bsclient.New(ctx, bsn, blockstore.NewBlockstore(datastore.NewNullDatastore()))
+	bsn.Start(bsc)
 
 	return &P2PClient{
-		Address:   address,
-		host:      host,
-		bsClient:  bswap,
-		fileStore: fileStore,
+		host: host,
+		bsn:  bsn,
+		bsc:  bsc,
+		fs:   fs,
 	}, nil
 }
 
 func (p *P2PClient) Close() error {
-	if err := p.bsClient.Close(); err != nil {
+	p.bsn.Stop()
+	if err := p.bsc.Close(); err != nil {
 		return err
 	}
 	if err := p.host.Close(); err != nil {
@@ -75,7 +75,7 @@ func (p *P2PClient) Connect(ctx context.Context, targetPeer string) error {
 	return nil
 }
 
-func (p *P2PClient) Disconnect(ctx context.Context, targetPeer string) error {
+func (p *P2PClient) Disconnect() error {
 	// connmanager 가 살아있을 때만 disconnect
 	return p.host.ConnManager().Close()
 }
@@ -83,7 +83,7 @@ func (p *P2PClient) Disconnect(ctx context.Context, targetPeer string) error {
 func (p *P2PClient) Download(ctx context.Context, ci cid.Cid, path string) error {
 	// conn manager 가 살아있을 때만 download
 	dserv := merkledag.NewReadOnlyDagService(
-		merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(datastore.NewNullDatastore()), p.bsClient))))
+		merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(datastore.NewNullDatastore()), p.bsc))))
 	node, err := dserv.Get(ctx, ci)
 	if err != nil {
 		return err
@@ -94,9 +94,10 @@ func (p *P2PClient) Download(ctx context.Context, ci cid.Cid, path string) error
 		return err
 	}
 
-	return p.fileStore.Put(path, unixFSNode)
+	return p.fs.Put(path, unixFSNode)
 }
 
 func (p *P2PClient) Upload(ctx context.Context, ci cid.Cid, path, name string, data *files.ReaderFile) error {
+
 	return nil
 }
