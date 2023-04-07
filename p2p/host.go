@@ -41,8 +41,10 @@ func makeHost(address string, listenPort int) (host host.Host, err error) {
 	return host, nil
 }
 
-func getHostAddress(host host.Host) string {
-	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", host.ID().String()))
-	addr := host.Addrs()[0]
+func getHostAddress(h host.Host) string {
+	addrInfo := host.InfoFromHost(h)
+	addr := addrInfo.Addrs[0]
+	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", addrInfo.ID.String()))
+
 	return addr.Encapsulate(hostAddr).String()
 }

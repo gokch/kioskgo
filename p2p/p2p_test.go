@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gokch/kioskgo/file"
@@ -14,25 +15,23 @@ func TestP2P(t *testing.T) {
 
 	// start server
 	fs1 := file.NewFileStore("")
-	server, err := NewP2PServer(ctx, "", fs1)
-	require.NoError(t, err)
-	err = server.Start()
+	Uploader, err := NewP2P(ctx, "", fs1, nil)
 	require.NoError(t, err)
 
-	cid, err := server.Upload(ctx, file.NewReaderFromPath("./맹구.png"))
-	fullAddr := getHostAddress(server.host)
+	cid, err := Uploader.Upload(ctx, file.NewReaderFromPath("./맹구.png"))
+	fullAddr := getHostAddress(Uploader.host)
+	fmt.Println(fullAddr, cid.String())
 
 	// start client
 	fs2 := file.NewFileStore("rootpath")
-	client, err := NewP2PClient(ctx, "", fs2)
+	Downloader, err := NewP2P(ctx, "", fs2, nil)
 	require.NoError(t, err)
-	err = client.Connect(ctx, fullAddr)
+	err = Downloader.Connect(ctx, fullAddr)
 	require.NoError(t, err)
 
 	// download file
-	err = client.Download(ctx, cid, "new/맹구.png")
+	err = Downloader.Download(ctx, cid, "new/맹구.png")
 	require.NoError(t, err)
 
-	client.Disconnect()
-	server.Close()
+	Uploader.Close()
 }

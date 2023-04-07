@@ -30,7 +30,7 @@ func main() {
 
 func rootRun(cmd *cobra.Command, args []string) {
 	fs := file.NewFileStore("server")
-	server, err := p2p.NewP2PServer(cmd.Context(), "", fs)
+	server, err := p2p.NewP2P(cmd.Context(), "", fs, nil)
 	if err != nil {
 		fmt.Println(err)
 		return
