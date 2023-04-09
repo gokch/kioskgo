@@ -14,23 +14,23 @@ func TestP2P(t *testing.T) {
 	defer cancel()
 
 	// start uploder
-	fs1 := file.NewFileStore("")
+	fs1 := file.NewFileStore("oripath")
 	Uploader, err := NewP2P(ctx, "", fs1, nil)
 	require.NoError(t, err)
 
-	cid, err := Uploader.Upload(ctx, "./맹구.png")
+	cid, err := Uploader.Upload(ctx, "맹구.png")
 	fullAddr := getHostAddress(Uploader.host)
 	fmt.Println(fullAddr, cid.String())
 
 	// start downloader
-	fs2 := file.NewFileStore("rootpath")
+	fs2 := file.NewFileStore("cpypath")
 	Downloader, err := NewP2P(ctx, "", fs2, nil)
 	require.NoError(t, err)
 	err = Downloader.Connect(ctx, fullAddr)
 	require.NoError(t, err)
 
 	// download file
-	err = Downloader.Download(ctx, cid, "new/맹구.png")
+	err = Downloader.Download(ctx, cid, "맹구.png")
 	require.NoError(t, err)
 
 	Uploader.Close()

@@ -131,7 +131,11 @@ func (p *P2P) Download(ctx context.Context, ci cid.Cid, path string) error {
 
 func (p *P2P) Upload(ctx context.Context, path string) (cid.Cid, error) {
 	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(file.NewReaderFromPath(path), chunker.DefaultBlockSize))
+	reader, err := p.fs.Get(path)
+	if err != nil {
+		return cid.Undef, err
+	}
+	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(reader, chunker.DefaultBlockSize))
 	if err != nil {
 		return cid.Undef, err
 	}
