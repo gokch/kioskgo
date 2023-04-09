@@ -8,8 +8,10 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
+	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/core/routing"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multicodec"
 
@@ -45,7 +47,7 @@ func NewP2P(ctx context.Context, address string, fs *file.FileStore, clientroute
 		RawLeaves: true,                     // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
 		CidBuilder: cid.V1Builder{ // Use CIDv1 for all links
 			Codec:    uint64(multicodec.DagPb),
-			MhType:   uint64(multicodec.Sha2_256), // Use SHA2-256 as the hash function
+			MhType:   uint64(multicodec.Sha3_256), // Use SHA3-256 as the hash function
 			MhLength: -1,                          // Use the default hash length for the given hash function (in this case 256 bits)
 		},
 		Dagserv: dsrv,
@@ -58,7 +60,13 @@ func NewP2P(ctx context.Context, address string, fs *file.FileStore, clientroute
 	}
 	address = getHostAddress(host)
 
-	bsn := bsnet.NewFromIpfsHost(host, contentrouter.NewContentRoutingClient(clientrouter))
+	var r routing.ContentRouting
+	if clientrouter == nil {
+		r = routinghelpers.Null{}
+	} else {
+		r = contentrouter.NewContentRoutingClient(clientrouter)
+	}
+	bsn := bsnet.NewFromIpfsHost(host, r)
 	bswap := bitswap.New(ctx, bsn, bs)
 	bsn.Start(bswap)
 

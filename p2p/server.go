@@ -22,7 +22,7 @@ import (
 // waitlist 수신
 // waitlist 에 맞게
 type Server struct {
-	P2P
+	Client  // 서버는 클라이언트를 겸함
 	ipfsdht *dht.IpfsDHT
 	svc     server.ContentRouter
 }

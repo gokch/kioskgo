@@ -13,7 +13,7 @@ func TestP2P(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// start server
+	// start uploder
 	fs1 := file.NewFileStore("")
 	Uploader, err := NewP2P(ctx, "", fs1, nil)
 	require.NoError(t, err)
@@ -22,7 +22,7 @@ func TestP2P(t *testing.T) {
 	fullAddr := getHostAddress(Uploader.host)
 	fmt.Println(fullAddr, cid.String())
 
-	// start client
+	// start downloader
 	fs2 := file.NewFileStore("rootpath")
 	Downloader, err := NewP2P(ctx, "", fs2, nil)
 	require.NoError(t, err)
