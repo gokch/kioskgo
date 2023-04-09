@@ -55,7 +55,10 @@ func (s *Server) FindProviders(ctx context.Context, key cid.Cid) ([]types.Provid
 
 func (s *Server) ProvideBitswap(ctx context.Context, req *server.BitswapWriteProvideRequest) (time.Duration, error) {
 	for _, cid := range req.Keys {
-		s.ipfsdht.ProviderStore().AddProvider(ctx, cid.Hash(), peer.AddrInfo{ID: req.ID, Addrs: req.Addrs})
+		err := s.ipfsdht.ProviderStore().AddProvider(ctx, cid.Hash(), peer.AddrInfo{ID: req.ID, Addrs: req.Addrs})
+		if err != nil {
+			return time.Minute, err
+		}
 	}
 
 	return req.AdvisoryTTL, nil

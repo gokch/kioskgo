@@ -18,7 +18,7 @@ func TestP2P(t *testing.T) {
 	Uploader, err := NewP2P(ctx, "", fs1, nil)
 	require.NoError(t, err)
 
-	cid, err := Uploader.Upload(ctx, file.NewReaderFromPath("./맹구.png"))
+	cid, err := Uploader.Upload(ctx, "./맹구.png")
 	fullAddr := getHostAddress(Uploader.host)
 	fmt.Println(fullAddr, cid.String())
 
