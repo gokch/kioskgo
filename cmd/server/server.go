@@ -36,7 +36,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	cid, err := server.Upload(cmd.Context(), file.NewReaderFromBytes([]byte("testaaaaaa")))
+	cid, err := server.Upload(cmd.Context(), "testaaaaaa")
 	fmt.Println(cid.String())
 	fmt.Println(server.Address)
 
