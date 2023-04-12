@@ -5,10 +5,12 @@ import (
 	"os"
 
 	"github.com/ipfs/boxo/files"
+	"github.com/ipfs/go-cid"
 )
 
 type Reader struct {
 	*files.ReaderFile
+	Cid cid.Cid
 }
 
 func NewReaderFromPath(path string) *Reader {
@@ -36,11 +38,12 @@ func NewReaderFromBytes(bt []byte) *Reader {
 }
 
 func NewReader(reader *files.ReaderFile) *Reader {
-	return &Reader{reader}
+	return &Reader{ReaderFile: reader, Cid: cid.Cid{}}
 }
 
 type Writer struct {
 	files.Node
+	Cid cid.Cid
 }
 
 func NewWriterFromBytes(bt []byte) *Writer {
@@ -49,5 +52,5 @@ func NewWriterFromBytes(bt []byte) *Writer {
 }
 
 func NewWriter(node files.Node) *Writer {
-	return &Writer{node}
+	return &Writer{Node: node, Cid: cid.Cid{}}
 }

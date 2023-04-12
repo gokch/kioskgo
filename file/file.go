@@ -1,6 +1,7 @@
 package file
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
@@ -9,6 +10,7 @@ import (
 )
 
 type FileStore struct {
+	withCid  bool // if true, add cid folder in latest path
 	mtx      *sync.Mutex
 	rootPath string
 }
@@ -20,6 +22,10 @@ func NewFileStore(rootPath string) *FileStore {
 		rootPath: rootPath,
 		mtx:      &sync.Mutex{},
 	}
+}
+
+func (f *FileStore) WithCid() {
+	f.withCid = true
 }
 
 func (f *FileStore) Overwrite(path string, writer *Writer) error {
@@ -63,8 +69,7 @@ func (f *FileStore) Get(path string) (*Reader, error) {
 }
 
 func (f *FileStore) Exist(path string) (bool, error) {
-	fileName := filepath.Join(f.rootPath, path)
-	_, err := os.Stat(fileName)
+	_, _, err := f.makePath(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
@@ -75,13 +80,12 @@ func (f *FileStore) Exist(path string) (bool, error) {
 }
 
 func (f *FileStore) Iterate(path string) ([]*Reader, error) {
-	filePath := filepath.Join(f.rootPath, path)
-	stat, err := os.Stat(filePath)
+	fullPath, stat, err := f.makePath(path)
 	if err != nil {
 		return nil, err
 	}
 
-	sf, err := files.NewSerialFile(filePath, true, stat)
+	sf, err := files.NewSerialFile(fullPath, true, stat)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +103,20 @@ func (f *FileStore) Iterate(path string) ([]*Reader, error) {
 }
 
 func (f *FileStore) Delete(path string) error {
-	fileName := filepath.Join(f.rootPath, path)
-	return os.Remove(fileName)
+	fullPath, _, err := f.makePath(path)
+	if err != nil {
+		return err
+	}
+	return os.Remove(fullPath)
+}
+
+func (f *FileStore) makePath(paths ...string) (string, fs.FileInfo, error) {
+	// append root path
+	paths = append([]string{f.rootPath}, paths...)
+	fullPath := filepath.Join(paths...)
+	stat, err := os.Stat(fullPath)
+	if err != nil {
+		return "", nil, err
+	}
+	return fullPath, stat, nil
 }

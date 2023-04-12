@@ -23,16 +23,20 @@ func NewClient(ctx context.Context, address string, fs *file.FileStore, clientro
 	if err != nil {
 		return nil, err
 	}
-	// init have list
-	// havelist := NewCids()
-	// readers, err := p2p.fs.Iterate()
+	// init waitlist, havelist
+	waitlist := NewCids()
+	havelist := NewCids()
+	readers, err := p2p.fs.Iterate("")
 	if err != nil {
 		return nil, err
 	}
+	for _, reader := range readers {
+		havelist.Add(reader.Cid, reader.ReaderFile.AbsPath())
+	}
 
 	return &Client{
-		havelist: NewCids(),
-		waitlist: NewCids(),
+		waitlist: waitlist,
+		havelist: havelist,
 		P2P:      p2p,
 	}, nil
 }
