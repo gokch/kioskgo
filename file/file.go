@@ -74,6 +74,32 @@ func (f *FileStore) Exist(path string) (bool, error) {
 	return true, nil
 }
 
+func (f *FileStore) Iterate(path string) ([]*Reader, error) {
+	filePath := filepath.Join(f.rootPath, path)
+	stat, err := os.Stat(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	sf, err := files.NewSerialFile(filePath, true, stat)
+	if err != nil {
+		return nil, err
+	}
+	readers := make([]*Reader, 0, 100)
+	err = files.Walk(sf, func(fpath string, node files.Node) error {
+		reader := NewReader(node.(*files.ReaderFile))
+		if reader.Stat().IsDir() == true {
+			return nil
+		}
+		readers = append(readers, reader)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return readers, nil
+}
+
 func (f *FileStore) Delete(path string) error {
 	fileName := filepath.Join(f.rootPath, path)
 	return os.Remove(fileName)

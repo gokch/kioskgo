@@ -43,11 +43,11 @@ type Writer struct {
 	files.Node
 }
 
-func NewWriter(node files.Node) *Writer {
-	return &Writer{node}
-}
-
 func NewWriterFromBytes(bt []byte) *Writer {
 	writer := files.NewReaderFile(bytes.NewReader(bt)).(*files.ReaderFile)
-	return &Writer{writer}
+	return NewWriter(writer)
+}
+
+func NewWriter(node files.Node) *Writer {
+	return &Writer{node}
 }
