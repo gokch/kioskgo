@@ -1,16 +1,28 @@
 package file
 
-import "github.com/dghubble/trie"
+import (
+	"github.com/dghubble/trie"
+	"github.com/ipfs/go-cid"
+)
 
-// manager
+// file manage by paths
 type fileManager struct {
-	t *trie.PathTrie
+	paths *trie.PathTrie
 }
 
-func NewPaths() *fileManager {
-	return &fileManager{t: trie.NewPathTrie()}
+func NewManager() *fileManager {
+	return &fileManager{paths: trie.NewPathTrie()}
 }
 
-func (p *fileManager) Add(path string) {
-	p.t.Put(path, true)
+func (fm *fileManager) Put(path string, fi *fileInfo) {
+	fm.paths.Put(path, fi)
+}
+
+func (fm *fileManager) Delete(path string) {
+	fm.paths.Delete(path)
+}
+
+type fileInfo struct {
+	path string // without cid path
+	cid  cid.Cid
 }

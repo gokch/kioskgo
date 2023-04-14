@@ -10,9 +10,12 @@ import (
 )
 
 type FileStore struct {
+	mtx *sync.Mutex
+
 	withCid  bool // if true, add cid folder in latest path
-	mtx      *sync.Mutex
 	rootPath string
+
+	fm *fileManager
 }
 
 func NewFileStore(rootPath string) *FileStore {
@@ -53,7 +56,6 @@ func (f *FileStore) Put(path string, writer *Writer) error {
 	return files.WriteTo(writer.Node, fileName)
 }
 
-// read from specific path using boxo/files
 func (f *FileStore) Get(path string) (*Reader, error) {
 	fileName := filepath.Join(f.rootPath, path)
 	stat, err := os.Stat(fileName)
