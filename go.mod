@@ -18,6 +18,8 @@ require (
 	google.golang.org/protobuf v1.30.0
 )
 
+require github.com/dghubble/trie v0.0.0-20230228185955-dca8fa4fd7f8
+
 require (
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect

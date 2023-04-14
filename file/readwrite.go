@@ -10,7 +10,7 @@ import (
 
 type Reader struct {
 	*files.ReaderFile
-	Cid cid.Cid
+	Cids []cid.Cid // cids in specific path, if withCid == nil, Cid is not specified
 }
 
 func NewReaderFromPath(path string) *Reader {
@@ -38,12 +38,12 @@ func NewReaderFromBytes(bt []byte) *Reader {
 }
 
 func NewReader(reader *files.ReaderFile) *Reader {
-	return &Reader{ReaderFile: reader, Cid: cid.Cid{}}
+	return &Reader{ReaderFile: reader, Cids: nil}
 }
 
 type Writer struct {
 	files.Node
-	Cid cid.Cid
+	Cid []cid.Cid // cids in specific path, if withCid == nil, Cid is not specified
 }
 
 func NewWriterFromBytes(bt []byte) *Writer {
@@ -52,5 +52,5 @@ func NewWriterFromBytes(bt []byte) *Writer {
 }
 
 func NewWriter(node files.Node) *Writer {
-	return &Writer{Node: node, Cid: cid.Cid{}}
+	return &Writer{Node: node, Cid: nil}
 }

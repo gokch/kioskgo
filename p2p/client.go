@@ -31,7 +31,8 @@ func NewClient(ctx context.Context, address string, fs *file.FileStore, clientro
 		return nil, err
 	}
 	for _, reader := range readers {
-		havelist.Add(reader.Cid, reader.ReaderFile.AbsPath())
+		_ = reader
+		// havelist.Add(reader.Cids, reader.ReaderFile.AbsPath())
 	}
 
 	return &Client{

@@ -13,14 +13,14 @@ import (
 type Cids struct {
 	mtx sync.Mutex
 
-	cids  map[cid.Cid]string // map[cid]localPath
-	paths map[string]cid.Cid // map[localPath]cid
+	cids  map[cid.Cid]string          // map[cid]localPath
+	paths map[string]map[cid.Cid]bool // map[localPath]cids
 }
 
 func NewCids() *Cids {
 	return &Cids{
 		cids:  map[cid.Cid]string{},
-		paths: map[string]cid.Cid{},
+		paths: map[string]map[cid.Cid]bool{},
 	}
 }
 
@@ -28,16 +28,19 @@ func (c *Cids) GetPath(cid cid.Cid) string {
 	return c.cids[cid]
 }
 
-func (c *Cids) GetCid(path string) cid.Cid {
+func (c *Cids) GetCids(path string) map[cid.Cid]bool {
 	return c.paths[path]
 }
 
-func (c *Cids) Add(cid cid.Cid, path string) {
+func (c *Cids) Add(ci cid.Cid, path string) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
-	c.cids[cid] = path
-	c.paths[path] = cid
+	c.cids[ci] = path
+	if _, ok := c.paths[path]; !ok {
+		c.paths[path] = map[cid.Cid]bool{}
+	}
+	c.paths[path][ci] = true
 }
 
 func (c *Cids) Remove(cid cid.Cid, path string) {
@@ -53,7 +56,7 @@ func (c *Cids) Clear() {
 	defer c.mtx.Unlock()
 
 	c.cids = map[cid.Cid]string{}
-	c.paths = map[string]cid.Cid{}
+	c.paths = map[string]map[cid.Cid]bool{}
 
 	// clear orphan memory
 	debug.FreeOSMemory()
