@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFileNewGet(t *testing.T) {
+func TestStoreNewGet(t *testing.T) {
 	fs := NewFileStore("rootpath")
 	require.NotNil(t, fs)
 

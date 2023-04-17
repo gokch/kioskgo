@@ -10,12 +10,8 @@ import (
 )
 
 type FileStore struct {
-	mtx *sync.Mutex
-
-	withCid  bool // if true, add cid folder in latest path
+	mtx      *sync.Mutex
 	rootPath string
-
-	fm *fileManager
 }
 
 func NewFileStore(rootPath string) *FileStore {
@@ -25,10 +21,6 @@ func NewFileStore(rootPath string) *FileStore {
 		rootPath: rootPath,
 		mtx:      &sync.Mutex{},
 	}
-}
-
-func (f *FileStore) WithCid() {
-	f.withCid = true
 }
 
 func (f *FileStore) Overwrite(path string, writer *Writer) error {

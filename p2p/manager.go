@@ -9,30 +9,31 @@ import (
 
 // 서버일 경우 waitlist 를 우선순위대로 처리
 // 클라이언트의 경우 waitlist 를 특정 피어에 요청
+// file 쪽으로 가고 지울 놈들임...
 
-type Cids struct {
+type fileManager struct {
 	mtx sync.Mutex
 
 	cids  map[cid.Cid]string          // map[cid]localPath
 	paths map[string]map[cid.Cid]bool // map[localPath]cids
 }
 
-func NewCids() *Cids {
-	return &Cids{
+func NewCids() *fileManager {
+	return &fileManager{
 		cids:  map[cid.Cid]string{},
 		paths: map[string]map[cid.Cid]bool{},
 	}
 }
 
-func (c *Cids) GetPath(cid cid.Cid) string {
+func (c *fileManager) GetPath(cid cid.Cid) string {
 	return c.cids[cid]
 }
 
-func (c *Cids) GetCids(path string) map[cid.Cid]bool {
+func (c *fileManager) GetCids(path string) map[cid.Cid]bool {
 	return c.paths[path]
 }
 
-func (c *Cids) Add(ci cid.Cid, path string) {
+func (c *fileManager) Add(ci cid.Cid, path string) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
@@ -43,7 +44,7 @@ func (c *Cids) Add(ci cid.Cid, path string) {
 	c.paths[path][ci] = true
 }
 
-func (c *Cids) Remove(cid cid.Cid, path string) {
+func (c *fileManager) Remove(cid cid.Cid, path string) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 
@@ -51,7 +52,7 @@ func (c *Cids) Remove(cid cid.Cid, path string) {
 	delete(c.paths, path)
 }
 
-func (c *Cids) Clear() {
+func (c *fileManager) Clear() {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 

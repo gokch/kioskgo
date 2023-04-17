@@ -11,8 +11,8 @@ import (
 // waitlist 발신 ( 수신 / 송신 )
 type Client struct {
 	*P2P
-	havelist *Cids // 현재 보유 목록
-	waitlist *Cids // 다운로드 대기 목록
+	havelist *file.FileManager // 현재 보유 목록
+	waitlist *file.FileManager // 다운로드 대기 목록
 }
 
 func NewClient(ctx context.Context, address string, fs *file.FileStore, clientrouter contentrouter.Client) (*Client, error) {
@@ -24,8 +24,8 @@ func NewClient(ctx context.Context, address string, fs *file.FileStore, clientro
 		return nil, err
 	}
 	// init waitlist, havelist
-	waitlist := NewCids()
-	havelist := NewCids()
+	waitlist := file.NewFileManager()
+	havelist := file.NewFileManager()
 	readers, err := p2p.fs.Iterate("")
 	if err != nil {
 		return nil, err
@@ -48,13 +48,13 @@ func (c *Client) Start() {
 
 // 1. 클라이언트가 특정 피어를 가지고 싶다고 요청
 func (c *Client) AddWaitlist(cid cid.Cid, path string) {
-	c.waitlist.Add(cid, path)
+	// c.waitlist.Add(cid, path)
 }
 
 // 1. waitlist 에서 요청한 cid 를 다운로드 받았을 경우
 // 2. 새로운 cid 를 가진 파일을 피어에 올릴 경우
 func (c *Client) AddHavelist(cid cid.Cid, path string) {
-	c.havelist.Add(cid, path)
+	// c.havelist.Add(cid, path)
 }
 
 func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) error {
@@ -64,7 +64,7 @@ func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) err
 	}
 
 	// 다운로드가 끝났을 시 waitlist 에서 지운다 + havelist 에 추가한다
-	c.waitlist.Remove(cid, path)
+	// c.waitlist.Remove(cid, path)
 	c.AddHavelist(cid, path)
 
 	return nil
