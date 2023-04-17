@@ -23,7 +23,7 @@ func TestStoreNewGet(t *testing.T) {
 	require.Equal(t, data1, data2)
 }
 
-func TestFileIterate(t *testing.T) {
+func TestStoreIterate(t *testing.T) {
 	fs := NewFileStore("rootpath")
 	require.NotNil(t, fs)
 
