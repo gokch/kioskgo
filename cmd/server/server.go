@@ -7,7 +7,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gokch/kioskgo/file"
 	"github.com/gokch/kioskgo/p2p"
 	"github.com/spf13/cobra"
 )
@@ -29,8 +28,7 @@ func main() {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-	fs := file.NewFileStore("server")
-	server, err := p2p.NewP2P(cmd.Context(), "", fs, nil)
+	server, err := p2p.NewP2P(cmd.Context(), "", "server", nil)
 	if err != nil {
 		fmt.Println(err)
 		return

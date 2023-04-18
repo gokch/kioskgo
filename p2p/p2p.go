@@ -37,7 +37,7 @@ type P2P struct {
 	fs      *file.FileStore
 }
 
-func NewP2P(ctx context.Context, address string, fs *file.FileStore, clientrouter contentrouter.Client) (*P2P, error) {
+func NewP2P(ctx context.Context, address string, rootPath string, clientrouter contentrouter.Client) (*P2P, error) {
 	// make import params
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore()))) // handle identity multihashes, these don't require doing any actual lookups
 	dsrv := merkledag.NewDAGService(blockservice.New(bs, offline.Exchange(bs)))
@@ -76,7 +76,7 @@ func NewP2P(ctx context.Context, address string, fs *file.FileStore, clientroute
 		bsn:     bsn,
 		bswap:   bswap,
 		builder: builder,
-		fs:      fs,
+		fs:      file.NewFileStore(rootPath),
 	}, nil
 }
 

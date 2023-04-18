@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/gokch/kioskgo/file"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,8 +13,7 @@ func TestP2P(t *testing.T) {
 	defer cancel()
 
 	// start uploder
-	fs1 := file.NewFileStore("oripath")
-	Uploader, err := NewP2P(ctx, "", fs1, nil)
+	Uploader, err := NewP2P(ctx, "", "oripath", nil)
 	require.NoError(t, err)
 
 	cid, err := Uploader.Upload(ctx, "맹구.png")
@@ -23,8 +21,7 @@ func TestP2P(t *testing.T) {
 	fmt.Println(fullAddr, cid.String())
 
 	// start downloader
-	fs2 := file.NewFileStore("cpypath")
-	Downloader, err := NewP2P(ctx, "", fs2, nil)
+	Downloader, err := NewP2P(ctx, "", "cpypath", nil)
 	require.NoError(t, err)
 	err = Downloader.Connect(ctx, fullAddr)
 	require.NoError(t, err)

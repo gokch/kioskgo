@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gokch/kioskgo/file"
 	"github.com/gokch/kioskgo/p2p"
 	"github.com/ipfs/go-cid"
 	"github.com/spf13/cobra"
@@ -28,8 +27,7 @@ func main() {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-	fs := file.NewFileStore("client")
-	client, err := p2p.NewP2P(context.Background(), "", fs, nil)
+	client, err := p2p.NewP2P(context.Background(), "", "client", nil)
 	if err != nil {
 		fmt.Println(err)
 		return

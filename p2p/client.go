@@ -15,17 +15,17 @@ type Client struct {
 	waitlist *file.FileManager // 다운로드 대기 목록
 }
 
-func NewClient(ctx context.Context, address string, fs *file.FileStore, clientrouter contentrouter.Client) (*Client, error) {
+func NewClient(ctx context.Context, address string, rootPath string, clientrouter contentrouter.Client) (*Client, error) {
 	if clientrouter == nil {
 	}
 
-	p2p, err := NewP2P(ctx, address, fs, clientrouter)
+	p2p, err := NewP2P(ctx, address, rootPath, clientrouter)
 	if err != nil {
 		return nil, err
 	}
 	// init waitlist, havelist
-	waitlist := file.NewFileManager()
-	havelist := file.NewFileManager()
+	waitlist := file.NewFileManager(rootPath)
+	havelist := file.NewFileManager(rootPath)
 	readers, err := p2p.fs.Iterate("")
 	if err != nil {
 		return nil, err
