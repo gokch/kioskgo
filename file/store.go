@@ -71,9 +71,7 @@ func (f *FileStore) Iterate(path string) ([]*Reader, error) {
 	readers := make([]*Reader, 0, 1024)
 	err = files.Walk(sf, func(fpath string, node files.Node) error {
 		if rf, ok := node.(*files.ReaderFile); ok {
-			if rf.Stat().IsDir() != true {
-				readers = append(readers, NewReader(rf))
-			}
+			readers = append(readers, NewReader(rf))
 		}
 		return nil
 	})
