@@ -8,6 +8,7 @@ import (
 )
 
 type Reader struct {
+	Path string
 	*files.ReaderFile
 }
 
@@ -30,13 +31,10 @@ func NewReaderFromPath(path string) *Reader {
 	return NewReader(reader)
 }
 
-func NewReaderFromBytes(bt []byte) *Reader {
-	reader := files.NewReaderFile(bytes.NewReader(bt)).(*files.ReaderFile)
-	return NewReader(reader)
-}
-
 func NewReader(reader *files.ReaderFile) *Reader {
-	return &Reader{ReaderFile: reader}
+	return &Reader{
+		ReaderFile: reader,
+	}
 }
 
 type Writer struct {

@@ -21,18 +21,21 @@ type FileManager struct {
 
 func NewFileManager(rootPath string) *FileManager {
 	return &FileManager{
+		mtx:      sync.Mutex{},
 		rootPath: rootPath,
 		cids:     map[cid.Cid]*FileInfo{},
 		paths:    trie.NewPathTrie(),
 	}
 }
 
-func (fm *FileManager) GetCids(cid cid.Cid) *FileInfo {
-	return fm.cids[cid]
-}
-
 func (fm *FileManager) Exist(path string, ci cid.Cid) bool {
 	return fm.Get(path, ci) != nil
+}
+
+func (fm *FileManager) PutReader(reader *Reader) {
+	path := reader.AbsPath()
+	_ = path // 어케하냐 이거
+
 }
 
 func (fm *FileManager) Put(path string, ci cid.Cid) {
@@ -65,7 +68,7 @@ func (fm *FileManager) Get(path string, ci cid.Cid) *FileInfo {
 	return fm.paths.Get(pathWithCid).(*FileInfo)
 }
 
-func (fm *FileManager) GetByCid(cid cid.Cid) *FileInfo {
+func (fm *FileManager) GetCid(cid cid.Cid) *FileInfo {
 	return fm.cids[cid]
 }
 

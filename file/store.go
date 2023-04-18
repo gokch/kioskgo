@@ -1,7 +1,6 @@
 package file
 
 import (
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
@@ -10,7 +9,7 @@ import (
 )
 
 type FileStore struct {
-	mtx      *sync.Mutex
+	mtx      sync.Mutex
 	rootPath string
 }
 
@@ -19,16 +18,13 @@ func NewFileStore(rootPath string) *FileStore {
 
 	return &FileStore{
 		rootPath: rootPath,
-		mtx:      &sync.Mutex{},
+		mtx:      sync.Mutex{},
 	}
 }
 
 func (f *FileStore) Overwrite(path string, writer *Writer) error {
-	exist, err := f.Exist(path)
-	if err != nil {
-		return err
-	} else if exist {
-		err = f.Delete(path)
+	if f.Exist(path) {
+		err := f.Delete(path)
 		if err != nil {
 			return err
 		}
@@ -49,44 +45,35 @@ func (f *FileStore) Put(path string, writer *Writer) error {
 }
 
 func (f *FileStore) Get(path string) (*Reader, error) {
-	fileName := filepath.Join(f.rootPath, path)
-	stat, err := os.Stat(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	node, err := files.NewSerialFile(fileName, true, stat)
-	if err != nil {
-		return nil, err
-	}
-	return NewReader(node.(*files.ReaderFile)), nil
+	fullPath := filepath.Join(f.rootPath, path)
+	return NewReaderFromPath(fullPath), nil
 }
 
-func (f *FileStore) Exist(path string) (bool, error) {
-	_, _, err := f.makePath(path)
+func (f *FileStore) Exist(path string) bool {
+	fullPath := filepath.Join(f.rootPath, path)
+	_, err := os.Stat(fullPath)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-		return false, err
+		return false
 	}
-	return true, nil
+	return true
 }
 
 func (f *FileStore) Iterate(path string) ([]*Reader, error) {
-	fullPath, stat, err := f.makePath(path)
+	fullPath := filepath.Join(f.rootPath, path)
+	stat, err := os.Stat(fullPath)
 	if err != nil {
 		return nil, err
 	}
-
 	sf, err := files.NewSerialFile(fullPath, true, stat)
 	if err != nil {
 		return nil, err
 	}
-	readers := make([]*Reader, 0, 100)
+	readers := make([]*Reader, 0, 1024)
 	err = files.Walk(sf, func(fpath string, node files.Node) error {
 		if rf, ok := node.(*files.ReaderFile); ok {
-			readers = append(readers, NewReader(rf))
+			if rf.Stat().IsDir() != true {
+				readers = append(readers, NewReader(rf))
+			}
 		}
 		return nil
 	})
@@ -97,20 +84,6 @@ func (f *FileStore) Iterate(path string) ([]*Reader, error) {
 }
 
 func (f *FileStore) Delete(path string) error {
-	fullPath, _, err := f.makePath(path)
-	if err != nil {
-		return err
-	}
+	fullPath := filepath.Join(f.rootPath, path)
 	return os.Remove(fullPath)
-}
-
-func (f *FileStore) makePath(paths ...string) (string, fs.FileInfo, error) {
-	// append root path
-	paths = append([]string{f.rootPath}, paths...)
-	fullPath := filepath.Join(paths...)
-	stat, err := os.Stat(fullPath)
-	if err != nil {
-		return "", nil, err
-	}
-	return fullPath, stat, nil
 }
