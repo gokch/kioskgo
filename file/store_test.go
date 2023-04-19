@@ -39,11 +39,10 @@ func TestStoreIterate(t *testing.T) {
 	require.NoError(t, err)
 
 	// iterate
-	readers, err := fs.Iterate("")
-	require.NoError(t, err)
-	for _, r := range readers {
-		out, err := io.ReadAll(r)
+	err = fs.Iterate("", func(fpath string, reader *Reader) {
+		out, err := io.ReadAll(reader)
 		require.NoError(t, err)
-		fmt.Println(r.AbsPath(), out)
-	}
+		fmt.Println(reader.AbsPath(), out)
+	})
+	require.NoError(t, err)
 }

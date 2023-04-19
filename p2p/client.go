@@ -26,12 +26,11 @@ func NewClient(ctx context.Context, address string, rootPath string, clientroute
 	// init waitlist, havelist
 	waitlist := file.NewFileManager(rootPath)
 	havelist := file.NewFileManager(rootPath)
-	readers, err := p2p.fs.Iterate("")
+	err = p2p.fs.Iterate("", func(fpath string, reader *file.Reader) {
+		// havelist.Put(fpath, filepath.Base(reader.AbsPath()))
+	})
 	if err != nil {
 		return nil, err
-	}
-	for _, reader := range readers {
-		havelist.PutReader(reader)
 	}
 
 	return &Client{

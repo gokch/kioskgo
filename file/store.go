@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -58,27 +59,23 @@ func (f *FileStore) Exist(path string) bool {
 	return true
 }
 
-func (f *FileStore) Iterate(path string) ([]*Reader, error) {
+func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader)) error {
 	fullPath := filepath.Join(f.rootPath, path)
 	stat, err := os.Stat(fullPath)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	sf, err := files.NewSerialFile(fullPath, true, stat)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	readers := make([]*Reader, 0, 1024)
-	err = files.Walk(sf, func(fpath string, node files.Node) error {
+	return files.Walk(sf, func(fpath string, node files.Node) error {
+		fmt.Println("path:", fpath)
 		if rf, ok := node.(*files.ReaderFile); ok {
-			readers = append(readers, NewReader(rf))
+			fn(fpath, NewReader(rf))
 		}
 		return nil
 	})
-	if err != nil {
-		return nil, err
-	}
-	return readers, nil
 }
 
 func (f *FileStore) Delete(path string) error {

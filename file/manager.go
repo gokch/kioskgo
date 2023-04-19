@@ -40,9 +40,9 @@ func (fm *FileManager) PutReader(reader *Reader) {
 
 func (fm *FileManager) Put(path string, ci cid.Cid) {
 	fi := &FileInfo{
-		rootPath: fm.rootPath,
-		myPath:   path,
-		cidPath:  ci.String(),
+		rootPath:     fm.rootPath,
+		relativePath: path,
+		cidPath:      ci.String(),
 	}
 
 	// add paths
@@ -93,7 +93,22 @@ func (fm *FileManager) Clear() {
 }
 
 type FileInfo struct {
-	rootPath string
-	myPath   string
-	cidPath  string
+	rootPath     string
+	relativePath string
+	cidPath      string
+}
+
+func NewFileInfo(rootPath string) *FileInfo {
+	return &FileInfo{
+		rootPath: rootPath,
+	}
+}
+
+func (fi *FileInfo) Set(fullPath string) {
+	if filepath.HasPrefix(fi.rootPath, fullPath) {
+	}
+}
+
+func (fi *FileInfo) Get() (fullPath string) {
+	return filepath.Join(fi.rootPath, fi.relativePath, fi.cidPath)
 }
