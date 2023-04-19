@@ -8,7 +8,6 @@ import (
 )
 
 type Reader struct {
-	Path string
 	*files.ReaderFile
 }
 
