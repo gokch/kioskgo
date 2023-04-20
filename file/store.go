@@ -1,7 +1,6 @@
 package file
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -42,6 +41,13 @@ func (f *FileStore) Put(path string, writer *Writer) error {
 		return err
 	}
 
+	// write cids
+	err = os.WriteFile(filepath.Join(filePath, DEF_PATH_CID_INFO), writer.ci.Bytes(), 0755)
+	if err != nil {
+		return err
+	}
+
+	// write file
 	return files.WriteTo(writer.Node, fileName)
 }
 
@@ -70,7 +76,6 @@ func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader)) 
 		return err
 	}
 	return files.Walk(sf, func(fpath string, node files.Node) error {
-		fmt.Println("path:", fpath)
 		if rf, ok := node.(*files.ReaderFile); ok {
 			fn(fpath, NewReader(rf))
 		}

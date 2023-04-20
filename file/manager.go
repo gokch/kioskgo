@@ -15,8 +15,8 @@ type FileManager struct {
 
 	rootPath string
 
-	cids  map[cid.Cid]*FileInfo
-	paths *trie.PathTrie
+	cids  map[cid.Cid]*FileInfo // map[cids]FileInfo
+	paths *trie.PathTrie        // trie[fileInfo]
 }
 
 func NewFileManager(rootPath string) *FileManager {
@@ -32,21 +32,13 @@ func (fm *FileManager) Exist(path string, ci cid.Cid) bool {
 	return fm.Get(path, ci) != nil
 }
 
-func (fm *FileManager) PutReader(reader *Reader) {
-	path := reader.AbsPath()
-	_ = path // 어케하냐 이거
-
-}
-
 func (fm *FileManager) Put(path string, ci cid.Cid) {
-	fi := &FileInfo{
-		rootPath:     fm.rootPath,
-		relativePath: path,
-		cidPath:      ci.String(),
-	}
+	pathWithCid := filepath.Join(path, ci.String())
+
+	fi := NewFileInfo(fm.rootPath)
+	fi.Set(pathWithCid)
 
 	// add paths
-	pathWithCid := filepath.Join(path, ci.String())
 	fm.paths.Put(pathWithCid, fi)
 
 	// add cids
@@ -54,6 +46,7 @@ func (fm *FileManager) Put(path string, ci cid.Cid) {
 }
 
 func (fm *FileManager) Delete(path string, ci cid.Cid) {
+
 	// del paths
 	pathWithCid := filepath.Join(path, ci.String())
 	fm.paths.Delete(pathWithCid)
@@ -95,7 +88,7 @@ func (fm *FileManager) Clear() {
 type FileInfo struct {
 	rootPath     string
 	relativePath string
-	cidPath      string
+	ci           cid.Cid
 }
 
 func NewFileInfo(rootPath string) *FileInfo {
@@ -104,11 +97,27 @@ func NewFileInfo(rootPath string) *FileInfo {
 	}
 }
 
-func (fi *FileInfo) Set(fullPath string) {
-	if filepath.HasPrefix(fi.rootPath, fullPath) {
+func (fi *FileInfo) Set(path string) error {
+	var err error
+	// if full path, make relative path
+	if filepath.HasPrefix(fi.rootPath, path) {
+		path, err = filepath.Rel(fi.rootPath, path)
+		if err != nil {
+			return err
+		}
 	}
+
+	// extract specific cid
+	ci, err := cid.Parse(filepath.Base(path))
+	if err != nil {
+		return err
+	}
+
+	fi.relativePath = path
+	fi.ci = ci
+	return nil
 }
 
-func (fi *FileInfo) Get() (fullPath string) {
-	return filepath.Join(fi.rootPath, fi.relativePath, fi.cidPath)
+func (fi *FileInfo) GetFullPath() (fullPath string) {
+	return filepath.Join(fi.rootPath, fi.relativePath)
 }

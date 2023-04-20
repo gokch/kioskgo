@@ -92,7 +92,6 @@ func (p *P2P) Close() error {
 }
 
 func (p *P2P) Connect(ctx context.Context, targetPeer string) error {
-	// TODO : conn manager 가 죽었을 때만 connect
 	maddr, err := multiaddr.NewMultiaddr(targetPeer)
 	if err != nil {
 		return err
@@ -126,15 +125,15 @@ func (p *P2P) Download(ctx context.Context, ci cid.Cid, path string) error {
 		return err
 	}
 
-	return p.fs.Put(path, file.NewWriter(unixFSNode))
+	return p.fs.Put(path, file.NewWriter(unixFSNode, ci))
 }
 
 func (p *P2P) Upload(ctx context.Context, path string) (cid.Cid, error) {
-	// Split the file up into fixed sized 256KiB chunks
 	reader, err := p.fs.Get(path)
 	if err != nil {
 		return cid.Undef, err
 	}
+	// Split the file up into fixed sized 256KiB chunks
 	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(reader, chunker.DefaultBlockSize))
 	if err != nil {
 		return cid.Undef, err
@@ -143,5 +142,6 @@ func (p *P2P) Upload(ctx context.Context, path string) (cid.Cid, error) {
 	if err != nil {
 		return cid.Undef, err
 	}
+
 	return nd.Cid(), nil
 }

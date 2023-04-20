@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gokch/kioskgo/file"
+	"github.com/ipfs/boxo/bitswap/client"
 	"github.com/ipfs/boxo/routing/http/contentrouter"
 	"github.com/ipfs/go-cid"
 )
@@ -11,6 +12,8 @@ import (
 // waitlist 발신 ( 수신 / 송신 )
 type Client struct {
 	*P2P
+	Client *client.Client
+
 	havelist *file.FileManager // 현재 보유 목록
 	waitlist *file.FileManager // 다운로드 대기 목록
 }
@@ -23,6 +26,7 @@ func NewClient(ctx context.Context, address string, rootPath string, clientroute
 	if err != nil {
 		return nil, err
 	}
+
 	// init waitlist, havelist
 	waitlist := file.NewFileManager(rootPath)
 	havelist := file.NewFileManager(rootPath)
@@ -37,6 +41,7 @@ func NewClient(ctx context.Context, address string, rootPath string, clientroute
 		waitlist: waitlist,
 		havelist: havelist,
 		P2P:      p2p,
+		Client:   p2p.bswap.Client,
 	}, nil
 }
 
@@ -46,6 +51,7 @@ func (c *Client) Start() {
 
 // 1. 클라이언트가 특정 피어를 가지고 싶다고 요청
 func (c *Client) AddWaitlist(cid cid.Cid, path string) {
+	c.Client.GetWantlist()
 	c.waitlist.Put(path, cid)
 }
 
