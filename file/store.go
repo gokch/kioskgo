@@ -31,6 +31,7 @@ func NewFileStore(rootPath string) *FileStore {
 		mtx:      sync.Mutex{},
 	}
 }
+
 func (d *FileStore) KeyFilename(path ds.Key) string {
 	return filepath.Join(d.rootPath, path.String(), DEF_PATH_KEY)
 }
