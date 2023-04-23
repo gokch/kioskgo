@@ -20,10 +20,16 @@ require (
 
 require (
 	github.com/dghubble/trie v0.0.0-20230228185955-dca8fa4fd7f8
+	github.com/ipfs/go-ipfs-exchange-offline v0.3.0
 	github.com/ipfs/go-ipfs-files v0.3.0
 )
 
-require github.com/ipfs/go-libipfs v0.4.0 // indirect
+require (
+	github.com/ipfs/go-ipfs-blockstore v1.3.0 // indirect
+	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
+	github.com/ipfs/go-ipfs-exchange-interface v0.2.0 // indirect
+	github.com/ipfs/go-libipfs v0.4.0 // indirect
+)
 
 require (
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect
