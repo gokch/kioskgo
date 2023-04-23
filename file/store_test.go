@@ -2,29 +2,32 @@ package file
 
 import (
 	"fmt"
-	"io"
 	"testing"
 
-	"github.com/ipfs/go-cid"
+	ds "github.com/ipfs/go-datastore"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 )
 
 func TestStoreNewGet(t *testing.T) {
+	ctx := context.Background()
+
 	fs := NewFileStore("rootpath")
 	require.NotNil(t, fs)
 
-	data1 := []byte("test")
-	err := fs.Overwrite("test/abc/d/e.txt", NewWriterFromBytes(data1, cid.Cid{}))
+	data1 := []byte("test1")
+	err := fs.Overwrite(ctx, ds.NewKey("test/abc/d/e.txt"), data1)
 	require.NoError(t, err)
 
-	reader, err := fs.Get("test/abc/d/e.txt")
+	data2, err := fs.Get(ctx, ds.NewKey("test/abc/d/e.txt"))
 	require.NoError(t, err)
 
-	data2, err := io.ReadAll(reader)
 	require.Equal(t, data1, data2)
 }
 
 func TestStoreIterate(t *testing.T) {
+	ctx := context.Background()
+
 	fs := NewFileStore("rootpath")
 	require.NotNil(t, fs)
 
@@ -32,18 +35,16 @@ func TestStoreIterate(t *testing.T) {
 	data := []byte("test1")
 	data2 := []byte("test2")
 	data3 := []byte("test3")
-	err := fs.Overwrite("a/data1.txt", NewWriterFromBytes(data, cid.Cid{}))
+	err := fs.Overwrite(ctx, ds.NewKey("a/data1.txt"), data)
 	require.NoError(t, err)
-	err = fs.Overwrite("a/b/c/data2.txt", NewWriterFromBytes(data2, cid.Cid{}))
+	err = fs.Overwrite(ctx, ds.NewKey("a/b/c/data2.txt"), data2)
 	require.NoError(t, err)
-	err = fs.Overwrite("a/b/c/d/e/data3.txt", NewWriterFromBytes(data3, cid.Cid{}))
+	err = fs.Overwrite(ctx, ds.NewKey("a/b/c/d/e/data3.txt"), data3)
 	require.NoError(t, err)
 
 	// iterate
-	err = fs.Iterate("", func(fpath string, reader *Reader) {
-		out, err := io.ReadAll(reader)
-		require.NoError(t, err)
-		fmt.Println(reader.AbsPath(), out)
+	err = fs.Iterate("", func(fpath string, value []byte) {
+		fmt.Println(fpath, value)
 	})
 	require.NoError(t, err)
 }

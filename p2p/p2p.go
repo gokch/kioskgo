@@ -1,13 +1,16 @@
 package p2p
 
 import (
+	"bytes"
 	"context"
+	"io"
 
 	"github.com/gokch/kioskgo/file"
 
 	"github.com/ipfs/go-cid"
-	"github.com/ipfs/go-datastore"
+	ds "github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
+	files "github.com/ipfs/go-ipfs-files"
 	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -39,7 +42,7 @@ type P2P struct {
 
 func NewP2P(ctx context.Context, address string, rootPath string, clientrouter contentrouter.Client) (*P2P, error) {
 	// make import params
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore()))) // handle identity multihashes, these don't require doing any actual lookups
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore()))) // handle identity multihashes, these don't require doing any actual lookups
 	dsrv := merkledag.NewDAGService(blockservice.New(bs, offline.Exchange(bs)))
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
@@ -114,7 +117,7 @@ func (p *P2P) Connect(ctx context.Context, targetPeer string) error {
 func (p *P2P) Download(ctx context.Context, ci cid.Cid, path string) error {
 	// conn manager 가 살아있을 때만 download
 	dserv := merkledag.NewReadOnlyDagService(
-		merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(datastore.NewNullDatastore()), p.bswap))))
+		merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(ds.NewNullDatastore()), p.bswap))))
 	node, err := dserv.Get(ctx, ci)
 	if err != nil {
 		return err
@@ -125,16 +128,22 @@ func (p *P2P) Download(ctx context.Context, ci cid.Cid, path string) error {
 		return err
 	}
 
-	return p.fs.Put(path, file.NewWriter(unixFSNode, ci))
+	var buf bytes.Buffer
+	if f, ok := unixFSNode.(files.File); ok {
+		if _, err := io.Copy(&buf, f); err != nil {
+			return err
+		}
+	}
+	return p.fs.Put(ctx, ds.NewKey(path), buf.Bytes())
 }
 
 func (p *P2P) Upload(ctx context.Context, path string) (cid.Cid, error) {
-	reader, err := p.fs.Get(path)
+	data, err := p.fs.Get(ctx, ds.NewKey(path))
 	if err != nil {
 		return cid.Undef, err
 	}
 	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(reader, chunker.DefaultBlockSize))
+	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(bytes.NewReader(data), chunker.DefaultBlockSize))
 	if err != nil {
 		return cid.Undef, err
 	}

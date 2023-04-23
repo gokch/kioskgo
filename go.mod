@@ -18,7 +18,12 @@ require (
 	google.golang.org/protobuf v1.30.0
 )
 
-require github.com/dghubble/trie v0.0.0-20230228185955-dca8fa4fd7f8
+require (
+	github.com/dghubble/trie v0.0.0-20230228185955-dca8fa4fd7f8
+	github.com/ipfs/go-ipfs-files v0.3.0
+)
+
+require github.com/ipfs/go-libipfs v0.4.0 // indirect
 
 require (
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect
@@ -135,7 +140,7 @@ require (
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/net v0.7.0
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
