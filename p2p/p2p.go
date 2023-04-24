@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
+	"path/filepath"
 
 	"github.com/gokch/kioskgo/file"
 
@@ -11,6 +13,7 @@ import (
 	ds "github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
 	files "github.com/ipfs/go-ipfs-files"
+	format "github.com/ipfs/go-ipld-format"
 	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -24,6 +27,7 @@ import (
 	"github.com/ipfs/boxo/blockstore"
 	chunker "github.com/ipfs/boxo/chunker"
 	offline "github.com/ipfs/boxo/exchange/offline"
+	"github.com/ipfs/boxo/ipld/car"
 	"github.com/ipfs/boxo/ipld/merkledag"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
@@ -36,6 +40,10 @@ type P2P struct {
 	host    host.Host
 	bsn     bsnet.BitSwapNetwork
 	bswap   *bitswap.Bitswap
+
+	bs   blockstore.Blockstore
+	dsrv format.DAGService
+
 	builder *uih.DagBuilderParams
 	fs      *file.FileStore
 }
@@ -44,7 +52,7 @@ func NewP2P(ctx context.Context, address string, rootPath string, clientrouter c
 	fileStore := file.NewFileStore(rootPath)
 
 	// make import params
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(fileStore))) // handle identity multihashes, these don't require doing any actual lookups
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore()))) // handle identity multihashes, these don't require doing any actual lookups
 	dsrv := merkledag.NewDAGService(blockservice.New(bs, offline.Exchange(bs)))
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
@@ -75,14 +83,44 @@ func NewP2P(ctx context.Context, address string, rootPath string, clientrouter c
 	bswap := bitswap.New(ctx, bsn, bs)
 	bsn.Start(bswap)
 
-	return &P2P{
+	p2p := &P2P{
 		Address: address,
 		host:    host,
 		bsn:     bsn,
 		bswap:   bswap,
+		bs:      bs,
+		dsrv:    dsrv,
 		builder: builder,
 		fs:      fileStore,
-	}, nil
+	}
+
+	return p2p, nil
+}
+
+func (p *P2P) LoadCar(ctx context.Context) error {
+	buf, err := ioutil.ReadFile(filepath.Join(p.fs.RootPath, ".car"))
+	if err != nil {
+		return err
+	}
+	_, err = car.LoadCar(ctx, p.bs, bytes.NewReader(buf))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *P2P) SaveCar(ctx context.Context) error {
+	buf := new(bytes.Buffer)
+	err := car.WriteCar(ctx, p.dsrv, []cid.Cid{}, buf)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(filepath.Join(p.fs.RootPath, ".car"), buf.Bytes(), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p *P2P) Close() error {

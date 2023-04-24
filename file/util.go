@@ -34,7 +34,8 @@ func isFile(path string) bool {
 }
 
 func getFilename(rootPath string, path ds.Key) string {
-	return filepath.Join(rootPath, path.String(), DEF_PATH_KEY)
+	return filepath.Join(rootPath, path.String())
+	// return filepath.Join(rootPath, path.String(), DEF_PATH_KEY)
 }
 
 // build ipld Node

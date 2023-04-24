@@ -28,7 +28,7 @@ require (
 	github.com/ipfs/go-ipfs-blockstore v1.3.0 // indirect
 	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
 	github.com/ipfs/go-ipfs-exchange-interface v0.2.0 // indirect
-	github.com/ipfs/go-libipfs v0.4.0 // indirect
+	github.com/ipfs/go-libipfs v0.6.2 // indirect
 )
 
 require (

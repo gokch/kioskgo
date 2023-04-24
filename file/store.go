@@ -8,13 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ipfs/boxo/files"
 	ds "github.com/ipfs/go-datastore"
 	"github.com/ipfs/go-datastore/query"
 )
 
 type FileStore struct {
-	rootPath string
+	RootPath string
 }
 
 var _ ds.Datastore = (*FileStore)(nil)
@@ -25,7 +24,7 @@ func NewFileStore(rootPath string) *FileStore {
 	os.MkdirAll(rootPath, 0755)
 
 	return &FileStore{
-		rootPath: rootPath,
+		RootPath: rootPath,
 	}
 }
 
@@ -42,7 +41,7 @@ func (f *FileStore) Overwrite(ctx context.Context, path ds.Key, value []byte) er
 
 // Put stores the given value.
 func (d *FileStore) Put(ctx context.Context, path ds.Key, value []byte) (err error) {
-	fileName := getFilename(d.rootPath, path)
+	fileName := getFilename(d.RootPath, path)
 
 	// mkdirall above.
 	err = os.MkdirAll(filepath.Dir(fileName), 0755)
@@ -60,7 +59,7 @@ func (d *FileStore) Sync(ctx context.Context, prefix ds.Key) error {
 }
 
 func (f *FileStore) Get(ctx context.Context, path ds.Key) ([]byte, error) {
-	fileName := getFilename(f.rootPath, path)
+	fileName := getFilename(f.RootPath, path)
 	if !isFile(fileName) {
 		return nil, ds.ErrNotFound
 	}
@@ -69,35 +68,36 @@ func (f *FileStore) Get(ctx context.Context, path ds.Key) ([]byte, error) {
 }
 
 // Has returns whether the datastore has a value for a given key
-func (f *FileStore) Has(ctx context.Context, key ds.Key) (exists bool, err error) {
-	return ds.GetBackedHas(ctx, f, key)
+func (f *FileStore) Has(ctx context.Context, path ds.Key) (exists bool, err error) {
+	return ds.GetBackedHas(ctx, f, path)
 }
 
-func (f *FileStore) GetSize(ctx context.Context, key ds.Key) (size int, err error) {
-	return ds.GetBackedSize(ctx, f, key)
+func (f *FileStore) GetSize(ctx context.Context, path ds.Key) (size int, err error) {
+	return ds.GetBackedSize(ctx, f, path)
 }
 
-func (f *FileStore) Iterate(path string, fn func(fpath string, value []byte)) error {
-	fullPath := filepath.Join(f.rootPath, path)
-	stat, err := os.Stat(fullPath)
-	if err != nil {
-		return err
-	}
-	sf, err := files.NewSerialFile(fullPath, true, stat)
-	if err != nil {
-		return err
-	}
-	return files.Walk(sf, func(fpath string, node files.Node) error {
-		if rf, ok := node.(*files.ReaderFile); ok {
-			bt, _ := ioutil.ReadAll(rf)
-			fn(fpath, bt)
+/*
+	func (f *FileStore) Iterate(path string, fn func(fpath string, value []byte)) error {
+		fullPath := filepath.Join(f.rootPath, path)
+		stat, err := os.Stat(fullPath)
+		if err != nil {
+			return err
 		}
-		return nil
-	})
-}
-
+		sf, err := files.NewSerialFile(fullPath, true, stat)
+		if err != nil {
+			return err
+		}
+		return files.Walk(sf, func(fpath string, node files.Node) error {
+			if rf, ok := node.(*files.ReaderFile); ok {
+				bt, _ := ioutil.ReadAll(rf)
+				fn(fpath, bt)
+			}
+			return nil
+		})
+	}
+*/
 func (f *FileStore) Delete(ctx context.Context, path ds.Key) error {
-	fieName := getFilename(f.rootPath, path)
+	fieName := getFilename(f.RootPath, path)
 	if !isFile(fieName) {
 		return nil
 	}
@@ -114,7 +114,7 @@ func (f *FileStore) Query(ctx context.Context, q query.Query) (query.Results, er
 
 	walkFn := func(path string, info os.FileInfo, _ error) error {
 		// remove ds path prefix
-		relPath, err := filepath.Rel(f.rootPath, path)
+		relPath, err := filepath.Rel(f.RootPath, path)
 		if err == nil {
 			path = filepath.ToSlash(relPath)
 		}
@@ -133,7 +133,7 @@ func (f *FileStore) Query(ctx context.Context, q query.Query) (query.Results, er
 	}
 
 	go func() {
-		filepath.Walk(f.rootPath, walkFn)
+		filepath.Walk(f.RootPath, walkFn)
 		close(results)
 	}()
 	r := query.ResultsWithChan(q, results)
@@ -152,7 +152,7 @@ func (f *FileStore) Batch(ctx context.Context) (ds.Batch, error) {
 // DiskUsage returns the disk size used by the datastore in bytes.
 func (f *FileStore) DiskUsage(ctx context.Context) (uint64, error) {
 	var du uint64
-	err := filepath.Walk(f.rootPath, func(p string, f os.FileInfo, err error) error {
+	err := filepath.Walk(f.RootPath, func(p string, f os.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 			return err

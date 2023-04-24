@@ -30,9 +30,9 @@ func NewClient(ctx context.Context, address string, rootPath string, clientroute
 	// init waitlist, havelist
 	waitlist := file.NewFileManager(rootPath)
 	havelist := file.NewFileManager(rootPath)
-	err = p2p.fs.Iterate("", func(fpath string, value []byte) {
-		// havelist.Put(fpath, filepath.Base(reader.AbsPath()))
-	})
+	// err = p2p.fs.Iterate("", func(fpath string, value []byte) {
+	// havelist.Put(fpath, filepath.Base(reader.AbsPath()))
+	// })
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,6 @@ func (c *Client) Start() {
 
 // 1. 클라이언트가 특정 피어를 가지고 싶다고 요청
 func (c *Client) AddWaitlist(cid cid.Cid, path string) {
-	c.Client.GetWantlist()
 	c.waitlist.Put(path, cid)
 }
 
