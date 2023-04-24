@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	bserv "github.com/ipfs/boxo/bitswap/server"
 	"github.com/ipfs/boxo/routing/http/server"
 	"github.com/ipfs/boxo/routing/http/types"
 	"github.com/ipfs/go-cid"
@@ -25,6 +26,7 @@ type Server struct {
 	Client  // 서버는 클라이언트를 겸함
 	ipfsdht *dht.IpfsDHT
 	svc     server.ContentRouter
+	Server  *bserv.Server
 }
 
 func NewServer() *Server {
@@ -32,6 +34,7 @@ func NewServer() *Server {
 }
 
 func (s *Server) FindProviders(ctx context.Context, key cid.Cid) ([]types.ProviderResponse, error) {
+	s.P2P.bsn.FindProvidersAsync(ctx, key, 60)
 	addrsInfo, err := s.ipfsdht.FindProviders(ctx, key)
 	if err != nil {
 		return nil, err
