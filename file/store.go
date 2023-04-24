@@ -32,10 +32,6 @@ func NewFileStore(rootPath string) *FileStore {
 	}
 }
 
-func (d *FileStore) KeyFilename(path ds.Key) string {
-	return filepath.Join(d.rootPath, path.String(), DEF_PATH_KEY)
-}
-
 func (f *FileStore) Overwrite(ctx context.Context, path ds.Key, value []byte) error {
 	if exist, _ := f.Has(ctx, path); exist {
 		err := f.Delete(ctx, path)
@@ -49,7 +45,7 @@ func (f *FileStore) Overwrite(ctx context.Context, path ds.Key, value []byte) er
 
 // Put stores the given value.
 func (d *FileStore) Put(ctx context.Context, path ds.Key, value []byte) (err error) {
-	fileName := d.KeyFilename(path)
+	fileName := getFilename(d.rootPath, path)
 
 	// mkdirall above.
 	err = os.MkdirAll(filepath.Dir(fileName), 0755)
@@ -67,12 +63,12 @@ func (d *FileStore) Sync(ctx context.Context, prefix ds.Key) error {
 }
 
 func (f *FileStore) Get(ctx context.Context, path ds.Key) ([]byte, error) {
-	fn := f.KeyFilename(path)
-	if !isFile(fn) {
+	fileName := getFilename(f.rootPath, path)
+	if !isFile(fileName) {
 		return nil, ds.ErrNotFound
 	}
 
-	return ioutil.ReadFile(fn)
+	return ioutil.ReadFile(fileName)
 }
 
 // Has returns whether the datastore has a value for a given key
@@ -104,11 +100,11 @@ func (f *FileStore) Iterate(path string, fn func(fpath string, value []byte)) er
 }
 
 func (f *FileStore) Delete(ctx context.Context, path ds.Key) error {
-	fullPath := f.KeyFilename(path)
-	if !isFile(fullPath) {
+	fieName := getFilename(f.rootPath, path)
+	if !isFile(fieName) {
 		return nil
 	}
-	err := os.Remove(fullPath)
+	err := os.Remove(fieName)
 	if os.IsNotExist(err) {
 		err = nil // idempotent
 	}

@@ -12,6 +12,7 @@ import (
 	offline "github.com/ipfs/go-ipfs-exchange-offline"
 )
 
+// TODO : DAG 부터 좀 해놓고 생각하자..
 type Mfs struct {
 	*mfs.Root
 }

@@ -2,6 +2,9 @@ package file
 
 import (
 	"os"
+	"path/filepath"
+
+	ds "github.com/ipfs/go-datastore"
 )
 
 // cids
@@ -29,3 +32,9 @@ func isFile(path string) bool {
 
 	return !finfo.IsDir()
 }
+
+func getFilename(rootPath string, path ds.Key) string {
+	return filepath.Join(rootPath, path.String(), DEF_PATH_KEY)
+}
+
+// build ipld Node
