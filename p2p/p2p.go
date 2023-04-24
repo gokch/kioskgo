@@ -41,8 +41,10 @@ type P2P struct {
 }
 
 func NewP2P(ctx context.Context, address string, rootPath string, clientrouter contentrouter.Client) (*P2P, error) {
+	fileStore := file.NewFileStore(rootPath)
+
 	// make import params
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore()))) // handle identity multihashes, these don't require doing any actual lookups
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(fileStore))) // handle identity multihashes, these don't require doing any actual lookups
 	dsrv := merkledag.NewDAGService(blockservice.New(bs, offline.Exchange(bs)))
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
@@ -79,7 +81,7 @@ func NewP2P(ctx context.Context, address string, rootPath string, clientrouter c
 		bsn:     bsn,
 		bswap:   bswap,
 		builder: builder,
-		fs:      file.NewFileStore(rootPath),
+		fs:      fileStore,
 	}, nil
 }
 

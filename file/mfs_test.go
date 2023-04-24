@@ -17,9 +17,9 @@ func TestMFS(t *testing.T) {
 	err := mfs.PutNode(mfsys.Root, "test/test.txt", merkledag.NodeWithData([]byte("안녕하세용")))
 	require.NoError(t, err)
 
-	child, err := mfs.FlushPath(context.Background(), mfsys.Root, "test/test.txt")
+	child, err := mfs.FlushPath(context.Background(), mfsys.Root, "test")
 	require.NoError(t, err)
 
-	fmt.Println(child.String())
-	fmt.Println(string(child.RawData()))
+	// fmt.Println(child.String())
+	fmt.Println("rawdata :", string(child.RawData()))
 }

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/ipfs/boxo/files"
 	ds "github.com/ipfs/go-datastore"
@@ -15,7 +14,6 @@ import (
 )
 
 type FileStore struct {
-	mtx      sync.Mutex
 	rootPath string
 }
 
@@ -28,7 +26,6 @@ func NewFileStore(rootPath string) *FileStore {
 
 	return &FileStore{
 		rootPath: rootPath,
-		mtx:      sync.Mutex{},
 	}
 }
 
