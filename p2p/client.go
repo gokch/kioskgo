@@ -10,7 +10,7 @@ import (
 
 // waitlist 발신 ( 수신 / 송신 )
 type Client struct {
-	*P2P
+	*DagBlock
 	Client *client.Client
 
 	havelist *file.FileManager // 현재 보유 목록
@@ -19,7 +19,7 @@ type Client struct {
 
 func NewClient(ctx context.Context, address string, rootPath string) (*Client, error) {
 	// TODO : init bitswap ( or offline. anyway. 빨리 고쳐라. )
-	p2p, err := NewP2P(ctx, rootPath, nil)
+	dagBlock, err := NewDagBlock(ctx, rootPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 	return &Client{
 		waitlist: waitlist,
 		havelist: havelist,
-		P2P:      p2p,
+		DagBlock: dagBlock,
 		// Client:   p2p.bswap.Client,
 	}, nil
 }
@@ -72,7 +72,7 @@ func (c *Client) AddHavelist(cid cid.Cid, path string) {
 }
 
 func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) error {
-	err := c.P2P.Download(ctx, cid, path)
+	err := c.DagBlock.Download(ctx, cid, path)
 	if err != nil {
 		return err
 	}
@@ -86,5 +86,5 @@ func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) err
 
 // peer 에 제공? - TODO: IPNS 를 통해 고유값 지정이 필요!!
 func (c *Client) RecvUpload(ctx context.Context, path string) {
-	c.P2P.Upload(ctx, path)
+	c.DagBlock.Upload(ctx, path)
 }

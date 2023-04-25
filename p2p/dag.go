@@ -20,12 +20,12 @@ import (
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
 )
 
-type P2P struct {
-	dag *uih.DagBuilderParams
-	fs  *file.FileStore
+type DagBlock struct {
+	dag *uih.DagBuilderParams // use MapDataStore
+	fs  *file.FileStore       // FileStore
 }
 
-func NewP2P(ctx context.Context, rootPath string, rem exchange.Interface) (*P2P, error) {
+func NewDagBlock(ctx context.Context, rootPath string, rem exchange.Interface) (*DagBlock, error) {
 	fs := file.NewFileStore(rootPath)
 
 	// make import params
@@ -44,20 +44,20 @@ func NewP2P(ctx context.Context, rootPath string, rem exchange.Interface) (*P2P,
 		NoCopy:  false,
 	}
 
-	p2p := &P2P{
+	dagBlock := &DagBlock{
 		dag: builder,
 		fs:  fs,
 	}
 
 	// import blocks in Merkle-DAG from fileStore
 	fs.Iterate("", func(path string, reader *file.Reader) {
-		p2p.Upload(ctx, path)
+		dagBlock.Upload(ctx, path)
 	})
 
-	return p2p, nil
+	return dagBlock, nil
 }
 
-func (p *P2P) Download(ctx context.Context, ci cid.Cid, path string) error {
+func (p *DagBlock) Download(ctx context.Context, ci cid.Cid, path string) error {
 	// conn manager 가 살아있을 때만 download
 	node, err := p.dag.Dagserv.Get(ctx, ci)
 	if err != nil {
@@ -72,7 +72,7 @@ func (p *P2P) Download(ctx context.Context, ci cid.Cid, path string) error {
 	return p.fs.Put(path, file.NewWriter(unixFSNode, node.Cid()))
 }
 
-func (p *P2P) Upload(ctx context.Context, path string) (cid.Cid, error) {
+func (p *DagBlock) Upload(ctx context.Context, path string) (cid.Cid, error) {
 	data, err := p.fs.Get(path)
 	if err != nil {
 		return cid.Undef, err
