@@ -59,7 +59,6 @@ func NewMount(ctx context.Context, rootPath string, rem exchange.Interface) (*Mo
 }
 
 func (p *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
-	// conn manager 가 살아있을 때만 download
 	node, err := p.dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err
