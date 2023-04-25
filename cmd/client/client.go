@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"context"
 	"fmt"
@@ -46,3 +47,4 @@ func rootRun(cmd *cobra.Command, args []string) {
 	}
 
 }
+*/

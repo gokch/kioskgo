@@ -1,16 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
-	"github.com/gokch/kioskgo/p2p"
-	"github.com/spf13/cobra"
-)
-
+/*
 var (
 	rootCmd = &cobra.Command{
 		Use: "server",
@@ -60,3 +50,4 @@ func handleKillSig(handler func()) {
 		}
 	}()
 }
+*/

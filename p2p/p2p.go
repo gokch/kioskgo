@@ -1,59 +1,36 @@
 package p2p
 
 import (
-	"bytes"
 	"context"
-	"io"
-	"io/ioutil"
-	"path/filepath"
 
 	"github.com/gokch/kioskgo/file"
 
+	"github.com/ipfs/boxo/exchange"
 	"github.com/ipfs/go-cid"
 	ds "github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
-	files "github.com/ipfs/go-ipfs-files"
-	format "github.com/ipfs/go-ipld-format"
-	routinghelpers "github.com/libp2p/go-libp2p-routing-helpers"
-	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/core/routing"
-	"github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multicodec"
 
-	"github.com/ipfs/boxo/bitswap"
-	bsnet "github.com/ipfs/boxo/bitswap/network"
 	"github.com/ipfs/boxo/blockservice"
 	"github.com/ipfs/boxo/blockstore"
 	chunker "github.com/ipfs/boxo/chunker"
-	offline "github.com/ipfs/boxo/exchange/offline"
-	"github.com/ipfs/boxo/ipld/car"
 	"github.com/ipfs/boxo/ipld/merkledag"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
-	"github.com/ipfs/boxo/routing/http/contentrouter"
 )
 
 type P2P struct {
-	Address string
-	host    host.Host
-	bsn     bsnet.BitSwapNetwork
-	bswap   *bitswap.Bitswap
-
-	bs   blockstore.Blockstore
-	dsrv format.DAGService
-
-	builder *uih.DagBuilderParams
-	fs      *file.FileStore
+	dag *uih.DagBuilderParams
+	fs  *file.FileStore
 }
 
-func NewP2P(ctx context.Context, address string, rootPath string, clientrouter contentrouter.Client) (*P2P, error) {
-	fileStore := file.NewFileStore(rootPath)
+func NewP2P(ctx context.Context, rootPath string, rem exchange.Interface) (*P2P, error) {
+	fs := file.NewFileStore(rootPath)
 
 	// make import params
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore()))) // handle identity multihashes, these don't require doing any actual lookups
-	dsrv := merkledag.NewDAGService(blockservice.New(bs, offline.Exchange(bs)))
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore())))
+	dsrv := merkledag.NewDAGService(blockservice.New(bs, rem))
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
 		Maxlinks:  uih.DefaultLinksPerBlock, // Default max of 174 links per block
@@ -67,123 +44,41 @@ func NewP2P(ctx context.Context, address string, rootPath string, clientrouter c
 		NoCopy:  false,
 	}
 
-	host, err := makeHost(address, 0)
-	if err != nil {
-		return nil, err
-	}
-	address = getHostAddress(host)
-
-	var r routing.ContentRouting
-	if clientrouter == nil {
-		r = routinghelpers.Null{}
-	} else {
-		r = contentrouter.NewContentRoutingClient(clientrouter)
-	}
-	bsn := bsnet.NewFromIpfsHost(host, r)
-	bswap := bitswap.New(ctx, bsn, bs)
-	bsn.Start(bswap)
-
 	p2p := &P2P{
-		Address: address,
-		host:    host,
-		bsn:     bsn,
-		bswap:   bswap,
-		bs:      bs,
-		dsrv:    dsrv,
-		builder: builder,
-		fs:      fileStore,
+		dag: builder,
+		fs:  fs,
 	}
+
+	// import blocks in Merkle-DAG from fileStore
+	fs.Iterate("", func(path string, reader *file.Reader) {
+		p2p.Upload(ctx, path)
+	})
 
 	return p2p, nil
 }
 
-func (p *P2P) LoadCar(ctx context.Context) error {
-	buf, err := ioutil.ReadFile(filepath.Join(p.fs.RootPath, ".car"))
-	if err != nil {
-		return err
-	}
-	_, err = car.LoadCar(ctx, p.bs, bytes.NewReader(buf))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *P2P) SaveCar(ctx context.Context) error {
-	buf := new(bytes.Buffer)
-	err := car.WriteCar(ctx, p.dsrv, []cid.Cid{}, buf)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(filepath.Join(p.fs.RootPath, ".car"), buf.Bytes(), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *P2P) Close() error {
-	p.bsn.Stop()
-	if err := p.bswap.Close(); err != nil {
-		return err
-	}
-	if err := p.host.Close(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *P2P) Connect(ctx context.Context, targetPeer string) error {
-	maddr, err := multiaddr.NewMultiaddr(targetPeer)
-	if err != nil {
-		return err
-	}
-	info, err := peer.AddrInfoFromP2pAddr(maddr)
-	if err != nil {
-		return err
-	}
-
-	// Directly connect to the peer that we know has the content
-	// Generally this peer will come from whatever content routing system is provided, however go-bitswap will also
-	// ask peers it is connected to for content so this will work
-	if err := p.host.Connect(ctx, *info); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (p *P2P) Download(ctx context.Context, ci cid.Cid, path string) error {
 	// conn manager 가 살아있을 때만 download
-	dserv := merkledag.NewReadOnlyDagService(
-		merkledag.NewSession(ctx, merkledag.NewDAGService(blockservice.New(blockstore.NewBlockstore(ds.NewNullDatastore()), p.bswap))))
-	node, err := dserv.Get(ctx, ci)
+	node, err := p.dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err
 	}
 
-	unixFSNode, err := unixfile.NewUnixfsFile(ctx, dserv, node)
+	unixFSNode, err := unixfile.NewUnixfsFile(ctx, p.dag.Dagserv, node)
 	if err != nil {
 		return err
 	}
 
-	var buf bytes.Buffer
-	if f, ok := unixFSNode.(files.File); ok {
-		if _, err := io.Copy(&buf, f); err != nil {
-			return err
-		}
-	}
-	return p.fs.Put(ctx, ds.NewKey(path), buf.Bytes())
+	return p.fs.Put(path, file.NewWriter(unixFSNode, node.Cid()))
 }
 
 func (p *P2P) Upload(ctx context.Context, path string) (cid.Cid, error) {
-	data, err := p.fs.Get(ctx, ds.NewKey(path))
+	data, err := p.fs.Get(path)
 	if err != nil {
 		return cid.Undef, err
 	}
 	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := p.builder.New(chunker.NewSizeSplitter(bytes.NewReader(data), chunker.DefaultBlockSize))
+	ufsBuilder, err := p.dag.New(chunker.NewSizeSplitter(data, chunker.DefaultBlockSize))
 	if err != nil {
 		return cid.Undef, err
 	}

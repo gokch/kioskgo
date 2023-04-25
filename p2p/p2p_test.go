@@ -1,9 +1,9 @@
 package p2p
 
+/*
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -36,6 +36,7 @@ func TestP2P(t *testing.T) {
 	Uploader.Close()
 }
 
+/*
 func TestP2PCar(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -61,3 +62,4 @@ func TestP2PCar(t *testing.T) {
 
 	fmt.Println(reflect.DeepEqual(Downloader.dsrv, Uploader.dsrv))
 }
+*/

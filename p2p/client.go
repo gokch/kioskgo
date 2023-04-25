@@ -5,7 +5,6 @@ import (
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/bitswap/client"
-	"github.com/ipfs/boxo/routing/http/contentrouter"
 	"github.com/ipfs/go-cid"
 )
 
@@ -18,11 +17,9 @@ type Client struct {
 	waitlist *file.FileManager // 다운로드 대기 목록
 }
 
-func NewClient(ctx context.Context, address string, rootPath string, clientrouter contentrouter.Client) (*Client, error) {
-	if clientrouter == nil {
-	}
-
-	p2p, err := NewP2P(ctx, address, rootPath, clientrouter)
+func NewClient(ctx context.Context, address string, rootPath string) (*Client, error) {
+	// TODO : init bitswap ( or offline. anyway. 빨리 고쳐라. )
+	p2p, err := NewP2P(ctx, rootPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -30,20 +27,34 @@ func NewClient(ctx context.Context, address string, rootPath string, clientroute
 	// init waitlist, havelist
 	waitlist := file.NewFileManager(rootPath)
 	havelist := file.NewFileManager(rootPath)
-	// err = p2p.fs.Iterate("", func(fpath string, value []byte) {
-	// havelist.Put(fpath, filepath.Base(reader.AbsPath()))
-	// })
-	if err != nil {
-		return nil, err
-	}
 
 	return &Client{
 		waitlist: waitlist,
 		havelist: havelist,
 		P2P:      p2p,
-		Client:   p2p.bswap.Client,
+		// Client:   p2p.bswap.Client,
 	}, nil
 }
+
+// func (p *P2P) Connect(ctx context.Context, targetPeer string) error {
+// 	maddr, err := multiaddr.NewMultiaddr(targetPeer)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	info, err := peer.AddrInfoFromP2pAddr(maddr)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Directly connect to the peer that we know has the content
+// 	// Generally this peer will come from whatever content routing system is provided, however go-bitswap will also
+// 	// ask peers it is connected to for content so this will work
+// 	if err := p.host.Connect(ctx, *info); err != nil {
+// 		return err
+// 	}
+
+// 	return nil
+// }
 
 func (c *Client) Start() {
 

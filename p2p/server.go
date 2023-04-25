@@ -1,5 +1,6 @@
 package p2p
 
+/*
 import (
 	"bytes"
 	"context"
@@ -197,3 +198,4 @@ func marshalJSONBytes(val any) ([]byte, error) {
 	// remove last \n added by Encode
 	return buf.Bytes()[:buf.Len()-1], nil
 }
+*/
