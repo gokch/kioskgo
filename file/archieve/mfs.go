@@ -19,7 +19,7 @@ type Mfs struct {
 	*mfs.Root
 }
 
-func NewMfs(fs *FileStore) *Mfs {
+func NewMfs(fs *DataStore) *Mfs {
 	db := dssync.MutexWrap(fs)
 	bs := bstore.NewBlockstore(db)
 	blockserv := bserv.New(bs, offline.Exchange(bs))

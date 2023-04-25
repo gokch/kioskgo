@@ -8,10 +8,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-func TestStoreNewGet(t *testing.T) {
+func TestDataStoreNewGet(t *testing.T) {
 	ctx := context.Background()
 
-	fs := NewFileStore("rootpath")
+	fs := NewDataStore("rootpath")
 	require.NotNil(t, fs)
 
 	data1 := []byte("test1")

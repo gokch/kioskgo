@@ -2,7 +2,6 @@ package file
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,23 +11,23 @@ import (
 	"github.com/ipfs/go-datastore/query"
 )
 
-type FileStore struct {
+type DataStore struct {
 	RootPath string
 }
 
-var _ ds.Datastore = (*FileStore)(nil)
-var _ ds.Batching = (*FileStore)(nil)
-var _ ds.PersistentDatastore = (*FileStore)(nil)
+var _ ds.Datastore = (*DataStore)(nil)
+var _ ds.Batching = (*DataStore)(nil)
+var _ ds.PersistentDatastore = (*DataStore)(nil)
 
-func NewFileStore(rootPath string) *FileStore {
+func NewDataStore(rootPath string) *DataStore {
 	os.MkdirAll(rootPath, 0755)
 
-	return &FileStore{
+	return &DataStore{
 		RootPath: rootPath,
 	}
 }
 
-func (f *FileStore) Overwrite(ctx context.Context, path ds.Key, value []byte) error {
+func (f *DataStore) Overwrite(ctx context.Context, path ds.Key, value []byte) error {
 	if exist, _ := f.Has(ctx, path); exist {
 		err := f.Delete(ctx, path)
 		if err != nil {
@@ -40,7 +39,7 @@ func (f *FileStore) Overwrite(ctx context.Context, path ds.Key, value []byte) er
 }
 
 // Put stores the given value.
-func (d *FileStore) Put(ctx context.Context, path ds.Key, value []byte) (err error) {
+func (d *DataStore) Put(ctx context.Context, path ds.Key, value []byte) (err error) {
 	fileName := getFilename(d.RootPath, path)
 
 	// mkdirall above.
@@ -49,30 +48,30 @@ func (d *FileStore) Put(ctx context.Context, path ds.Key, value []byte) (err err
 		return err
 	}
 
-	return ioutil.WriteFile(fileName, value, 0666)
+	return os.WriteFile(fileName, value, 0666)
 }
 
 // Sync would ensure that any previous Puts under the prefix are written to disk.
 // However, they already are.
-func (d *FileStore) Sync(ctx context.Context, prefix ds.Key) error {
+func (d *DataStore) Sync(ctx context.Context, prefix ds.Key) error {
 	return nil
 }
 
-func (f *FileStore) Get(ctx context.Context, path ds.Key) ([]byte, error) {
+func (f *DataStore) Get(ctx context.Context, path ds.Key) ([]byte, error) {
 	fileName := getFilename(f.RootPath, path)
 	if !isFile(fileName) {
 		return nil, ds.ErrNotFound
 	}
 
-	return ioutil.ReadFile(fileName)
+	return os.ReadFile(fileName)
 }
 
 // Has returns whether the datastore has a value for a given key
-func (f *FileStore) Has(ctx context.Context, path ds.Key) (exists bool, err error) {
+func (f *DataStore) Has(ctx context.Context, path ds.Key) (exists bool, err error) {
 	return ds.GetBackedHas(ctx, f, path)
 }
 
-func (f *FileStore) GetSize(ctx context.Context, path ds.Key) (size int, err error) {
+func (f *DataStore) GetSize(ctx context.Context, path ds.Key) (size int, err error) {
 	return ds.GetBackedSize(ctx, f, path)
 }
 
@@ -96,12 +95,10 @@ func (f *FileStore) GetSize(ctx context.Context, path ds.Key) (size int, err err
 		})
 	}
 */
-func (f *FileStore) Delete(ctx context.Context, path ds.Key) error {
-	fieName := getFilename(f.RootPath, path)
-	if !isFile(fieName) {
-		return nil
-	}
-	err := os.Remove(fieName)
+func (f *DataStore) Delete(ctx context.Context, path ds.Key) error {
+	fileName := getFilename(f.RootPath, path)
+
+	err := os.Remove(fileName)
 	if os.IsNotExist(err) {
 		err = nil // idempotent
 	}
@@ -109,7 +106,7 @@ func (f *FileStore) Delete(ctx context.Context, path ds.Key) error {
 }
 
 // Query implements Datastore.Query
-func (f *FileStore) Query(ctx context.Context, q query.Query) (query.Results, error) {
+func (f *DataStore) Query(ctx context.Context, q query.Query) (query.Results, error) {
 	results := make(chan query.Result)
 
 	walkFn := func(path string, info os.FileInfo, _ error) error {
@@ -141,16 +138,16 @@ func (f *FileStore) Query(ctx context.Context, q query.Query) (query.Results, er
 	return r, nil
 }
 
-func (f *FileStore) Close() error {
+func (f *DataStore) Close() error {
 	return nil
 }
 
-func (f *FileStore) Batch(ctx context.Context) (ds.Batch, error) {
+func (f *DataStore) Batch(ctx context.Context) (ds.Batch, error) {
 	return ds.NewBasicBatch(f), nil
 }
 
 // DiskUsage returns the disk size used by the datastore in bytes.
-func (f *FileStore) DiskUsage(ctx context.Context) (uint64, error) {
+func (f *DataStore) DiskUsage(ctx context.Context) (uint64, error) {
 	var du uint64
 	err := filepath.Walk(f.RootPath, func(p string, f os.FileInfo, err error) error {
 		if err != nil {

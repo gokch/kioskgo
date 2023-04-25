@@ -11,7 +11,7 @@ import (
 )
 
 func TestMFS(t *testing.T) {
-	mfsys := NewMfs(NewFileStore("rootpath"))
+	mfsys := NewMfs(NewDataStore("rootpath"))
 	rootDir := mfsys.Root.GetDirectory()
 	rootDir.Mkdir("test")
 	err := mfs.PutNode(mfsys.Root, "test/test.txt", merkledag.NodeWithData([]byte("안녕하세용")))
