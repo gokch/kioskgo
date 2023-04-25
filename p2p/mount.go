@@ -20,12 +20,13 @@ import (
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
 )
 
-type DagBlock struct {
+// Mount dag to fileStore
+type Mount struct {
 	dag *uih.DagBuilderParams // use MapDataStore
 	fs  *file.FileStore       // FileStore
 }
 
-func NewDagBlock(ctx context.Context, rootPath string, rem exchange.Interface) (*DagBlock, error) {
+func NewMount(ctx context.Context, rootPath string, rem exchange.Interface) (*Mount, error) {
 	fs := file.NewFileStore(rootPath)
 
 	// make import params
@@ -44,20 +45,20 @@ func NewDagBlock(ctx context.Context, rootPath string, rem exchange.Interface) (
 		NoCopy:  false,
 	}
 
-	dagBlock := &DagBlock{
+	mount := &Mount{
 		dag: builder,
 		fs:  fs,
 	}
 
 	// import blocks in Merkle-DAG from fileStore
 	fs.Iterate("", func(path string, reader *file.Reader) {
-		dagBlock.Upload(ctx, path)
+		mount.Upload(ctx, path)
 	})
 
-	return dagBlock, nil
+	return mount, nil
 }
 
-func (p *DagBlock) Download(ctx context.Context, ci cid.Cid, path string) error {
+func (p *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
 	// conn manager 가 살아있을 때만 download
 	node, err := p.dag.Dagserv.Get(ctx, ci)
 	if err != nil {
@@ -72,7 +73,7 @@ func (p *DagBlock) Download(ctx context.Context, ci cid.Cid, path string) error 
 	return p.fs.Put(path, file.NewWriter(unixFSNode, node.Cid()))
 }
 
-func (p *DagBlock) Upload(ctx context.Context, path string) (cid.Cid, error) {
+func (p *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
 	data, err := p.fs.Get(path)
 	if err != nil {
 		return cid.Undef, err
