@@ -46,7 +46,6 @@ func (fm *FileManager) Put(path string, ci cid.Cid) {
 }
 
 func (fm *FileManager) Delete(path string, ci cid.Cid) {
-
 	// del paths
 	pathWithCid := filepath.Join(path, ci.String())
 	fm.paths.Delete(pathWithCid)

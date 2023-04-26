@@ -13,8 +13,8 @@ import (
 	"github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -24,7 +24,6 @@ type Client struct {
 	Client *client.Client
 
 	host  host.Host
-	bsn   bsnet.BitSwapNetwork
 	bswap *bitswap.Bitswap
 
 	havelist *file.FileManager // 현재 보유 목록
@@ -45,7 +44,6 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 	var clientrouter contentrouter.Client
 	bsn := bsnet.NewFromIpfsHost(host, contentrouter.NewContentRoutingClient(clientrouter))
 	bswap := bitswap.New(ctx, bsn, bs)
-	bsn.Start(bswap)
 
 	// TODO : init bitswap ( or offline. anyway. 빨리 고쳐라. )
 	mount, err := mount.NewMount(ctx, fs, bs, bswap)
@@ -57,12 +55,14 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 	waitlist := file.NewFileManager(rootPath)
 	havelist := file.NewFileManager(rootPath)
 
+	// start server
+	bsn.Start(bswap)
+
 	return &Client{
 		waitlist: waitlist,
 		havelist: havelist,
 		mount:    mount,
 		host:     host,
-		bsn:      bsn,
 		bswap:    bswap,
 		// Client:   p2p.bswap.Client,
 	}, nil
@@ -89,7 +89,6 @@ func (c *Client) Connect(ctx context.Context, targetPeer string) error {
 }
 
 func (c *Client) Close() error {
-	c.bsn.Stop()
 	if err := c.bswap.Close(); err != nil {
 		return err
 	}
