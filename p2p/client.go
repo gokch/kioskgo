@@ -8,11 +8,11 @@ import (
 	"github.com/ipfs/boxo/bitswap"
 	"github.com/ipfs/boxo/bitswap/client"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
-	"github.com/ipfs/boxo/routing/http/contentrouter"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	"github.com/libp2p/go-libp2p-kad-dht/dual"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
@@ -39,10 +39,13 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 		return nil, err
 	}
 	address = getHostAddress(host)
-
 	// TODO : Make routing 기준
-	var clientrouter contentrouter.Client
-	bsn := bsnet.NewFromIpfsHost(host, contentrouter.NewContentRoutingClient(clientrouter))
+	dht, err := dual.New(ctx, host)
+	if err != nil {
+		return nil, err
+	}
+
+	bsn := bsnet.NewFromIpfsHost(host, dht)
 	bswap := bitswap.New(ctx, bsn, bs)
 
 	// init bitswap
@@ -100,6 +103,7 @@ func (c *Client) Close() error {
 
 // 1. 클라이언트가 특정 피어를 가지고 싶다고 요청
 func (c *Client) AddWaitlist(cid cid.Cid, path string) {
+	// c.Client.ReceiveMessage()
 	c.waitlist.Put(path, cid)
 }
 
