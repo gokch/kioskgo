@@ -1,39 +1,46 @@
 package mount
 
-/*
 import (
 	"context"
 	"fmt"
 	"testing"
 
+	"github.com/gokch/kioskgo/file"
+	"github.com/ipfs/boxo/exchange/offline"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-datastore"
+	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/stretchr/testify/require"
 )
 
-func TestP2P(t *testing.T) {
+// file to unixfs ( + cid ) 기능 필요..
+func TestInitDHT(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// make file store
+	fs := file.NewFileStore("oripath")
+	fs.Put("a", file.NewWriterFromBytes([]byte("testaa"), cid.Cid{}))
+	fs.Put("b", file.NewWriterFromBytes([]byte("testbb"), cid.Cid{}))
+
+	// make block store
+	mds := datastore.NewMapDatastore()
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(mds))
+	ex := offline.Exchange(bs)
+
 	// start uploder
-	Uploader, err := NewP2P(ctx, "", "oripath", nil)
+	mnt, err := NewMount(ctx, fs, bs, ex)
 	require.NoError(t, err)
 
-	cid, err := Uploader.Upload(ctx, "kokomi.png")
+	// get cid
+	cid, err := mnt.Dag.CidBuilder.Sum([]byte("testaa"))
 	require.NoError(t, err)
+	fmt.Println(cid.String())
 
-	fullAddr := getHostAddress(Uploader.host)
-	fmt.Println("addr, cid : ", fullAddr, "|", cid.String())
-
-	// start downloader
-	Downloader, err := NewP2P(ctx, "", "cpypath", nil)
+	// get data from cid
+	data, err := mnt.Dag.Dagserv.Get(ctx, cid)
 	require.NoError(t, err)
-	err = Downloader.Connect(ctx, fullAddr)
-	require.NoError(t, err)
-
-	// download file
-	err = Downloader.Download(ctx, cid, "kokomi.png")
-	require.NoError(t, err)
-
-	Uploader.Close()
+	fmt.Println(data)
 }
 
 /*
