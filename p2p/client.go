@@ -45,7 +45,7 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 	bsn := bsnet.NewFromIpfsHost(host, contentrouter.NewContentRoutingClient(clientrouter))
 	bswap := bitswap.New(ctx, bsn, bs)
 
-	// TODO : init bitswap ( or offline. anyway. 빨리 고쳐라. )
+	// init bitswap
 	mount, err := mount.NewMount(ctx, fs, bs, bswap)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 		mount:    mount,
 		host:     host,
 		bswap:    bswap,
-		// Client:   p2p.bswap.Client,
+		Client:   bswap.Client,
 	}, nil
 }
 

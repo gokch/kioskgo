@@ -17,13 +17,11 @@ require (
 require (
 	github.com/dghubble/trie v0.0.0-20230228185955-dca8fa4fd7f8
 	github.com/ipfs/go-ipfs-blockstore v1.3.0
-	github.com/ipfs/go-ipfs-exchange-offline v0.3.0
 )
 
 require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
-	github.com/ipfs/go-ipfs-exchange-interface v0.2.0 // indirect
 	github.com/ipfs/go-ipfs-pq v0.0.3 // indirect
 	github.com/ipfs/go-peertaskqueue v0.8.1 // indirect
 	github.com/samber/lo v1.36.0 // indirect
@@ -132,7 +130,7 @@ require (
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.7.0
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
