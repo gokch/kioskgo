@@ -7,8 +7,6 @@ import (
 
 	"github.com/ipfs/boxo/exchange"
 	"github.com/ipfs/go-cid"
-	ds "github.com/ipfs/go-datastore"
-	dsync "github.com/ipfs/go-datastore/sync"
 	"github.com/multiformats/go-multicodec"
 
 	"github.com/ipfs/boxo/blockservice"
@@ -25,17 +23,13 @@ import (
 // dag 의 block 은 어느 기준으로 Garbage collect??
 // 블록 전체를 캐싱하고 있으면 안되는데...
 type Mount struct {
-	dag *uih.DagBuilderParams // use MapDataStore
-	fs  *file.FileStore       // FileStore
+	Bs  *blockservice.BlockService
+	Dag *uih.DagBuilderParams // use MapDataStore
+	Fs  *file.FileStore       // FileStore
 }
 
-func NewMount(ctx context.Context, rootPath string, rem exchange.Interface) (*Mount, error) {
-	// make file store
-	fs := file.NewFileStore(rootPath)
-
+func NewMount(ctx context.Context, fs *file.FileStore, bs blockstore.Blockstore, rem exchange.Interface) (*Mount, error) {
 	// make dag service, save dht blocks
-	dsrv := merkledag.NewDAGService(blockservice.New(blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore()))), rem))
-
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
 		Maxlinks:  uih.DefaultLinksPerBlock, // Default max of 174 links per block
@@ -45,13 +39,13 @@ func NewMount(ctx context.Context, rootPath string, rem exchange.Interface) (*Mo
 			MhType:   uint64(multicodec.Sha3_256), // Use SHA3-256 as the hash function
 			MhLength: -1,                          // Use the default hash length for the given hash function (in this case 256 bits)
 		},
-		Dagserv: dsrv,
+		Dagserv: merkledag.NewDAGService(blockservice.New(bs, rem)),
 		NoCopy:  false,
 	}
 
 	mount := &Mount{
-		dag: builder,
-		fs:  fs,
+		Dag: builder,
+		Fs:  fs,
 	}
 
 	// import blocks in Merkle-DAG from fileStore
@@ -70,26 +64,26 @@ func NewMount(ctx context.Context, rootPath string, rem exchange.Interface) (*Mo
 }
 
 func (p *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
-	node, err := p.dag.Dagserv.Get(ctx, ci)
+	node, err := p.Dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err
 	}
 
-	unixFSNode, err := unixfile.NewUnixfsFile(ctx, p.dag.Dagserv, node)
+	unixFSNode, err := unixfile.NewUnixfsFile(ctx, p.Dag.Dagserv, node)
 	if err != nil {
 		return err
 	}
 
-	return p.fs.Put(path, file.NewWriter(unixFSNode, node.Cid()))
+	return p.Fs.Put(path, file.NewWriter(unixFSNode, node.Cid()))
 }
 
 func (p *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
-	data, err := p.fs.Get(path)
+	data, err := p.Fs.Get(path)
 	if err != nil {
 		return cid.Undef, err
 	}
 	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := p.dag.New(chunker.NewSizeSplitter(data, chunker.DefaultBlockSize))
+	ufsBuilder, err := p.Dag.New(chunker.NewSizeSplitter(data, chunker.DefaultBlockSize))
 	if err != nil {
 		return cid.Undef, err
 	}
