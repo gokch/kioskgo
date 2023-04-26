@@ -65,7 +65,7 @@ func (f *FileStore) Exist(path string) bool {
 	return true
 }
 
-func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader)) error {
+func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader) error) error {
 	fullPath := filepath.Join(f.rootPath, path)
 	stat, err := os.Stat(fullPath)
 	if err != nil {
@@ -77,9 +77,11 @@ func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader)) 
 	}
 	return files.Walk(sf, func(fpath string, node files.Node) error {
 		if rf, ok := node.(*files.ReaderFile); ok {
-			fn(fpath, NewReader(rf))
+			if err = fn(fpath, NewReader(rf)); err != nil {
+				return err
+			}
 		}
-		return nil
+		return nil // ignore directory
 	})
 }
 

@@ -40,10 +40,11 @@ func TestStoreIterate(t *testing.T) {
 	require.NoError(t, err)
 
 	// iterate
-	err = fs.Iterate("", func(fpath string, reader *Reader) {
+	err = fs.Iterate("", func(fpath string, reader *Reader) error {
 		out, err := io.ReadAll(reader)
 		require.NoError(t, err)
 		fmt.Println(reader.AbsPath(), out)
+		return nil
 	})
 	require.NoError(t, err)
 }

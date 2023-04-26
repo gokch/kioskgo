@@ -21,17 +21,21 @@ import (
 )
 
 // Mount dag to fileStore
+// TODO : fs 의 cid 와 dag 의 cid 가 다를 경우 처리 필요
+// dag 의 block 은 어느 기준으로 Garbage collect??
+// 블록 전체를 캐싱하고 있으면 안되는데...
 type Mount struct {
 	dag *uih.DagBuilderParams // use MapDataStore
 	fs  *file.FileStore       // FileStore
 }
 
 func NewMount(ctx context.Context, rootPath string, rem exchange.Interface) (*Mount, error) {
+	// make file store
 	fs := file.NewFileStore(rootPath)
 
-	// make import params
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore())))
-	dsrv := merkledag.NewDAGService(blockservice.New(bs, rem))
+	// make dag service, save dht blocks
+	dsrv := merkledag.NewDAGService(blockservice.New(blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(ds.NewMapDatastore()))), rem))
+
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
 		Maxlinks:  uih.DefaultLinksPerBlock, // Default max of 174 links per block
@@ -51,9 +55,16 @@ func NewMount(ctx context.Context, rootPath string, rem exchange.Interface) (*Mo
 	}
 
 	// import blocks in Merkle-DAG from fileStore
-	fs.Iterate("", func(path string, reader *file.Reader) {
-		mount.Upload(ctx, path)
+	err := fs.Iterate("", func(path string, reader *file.Reader) error {
+		_, err := mount.Upload(ctx, path)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return mount, nil
 }
