@@ -23,7 +23,6 @@ import (
 // dag 의 block 은 어느 기준으로 Garbage collect?? 블록 전체를 캐싱하고 있으면 안되는데...
 // filemanager 도 여기에 넣는게 맞나?
 type Mount struct {
-	Bs  *blockservice.BlockService
 	Dag *uih.DagBuilderParams // use MapDataStore
 	Fs  *file.FileStore       // FileStore
 }
