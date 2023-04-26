@@ -1,6 +1,5 @@
 package main
 
-/*
 import (
 	"context"
 	"fmt"
@@ -28,7 +27,7 @@ func main() {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-	client, err := p2p.NewP2P(context.Background(), "", "client", nil)
+	client, err := p2p.NewClient(context.Background(), "", "client")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -40,11 +39,6 @@ func rootRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	err = client.Download(cmd.Context(), cid.MustParse("bafkreicsqaff7pryibb4lucdonapngzvk44nspdaoal3qn3oq55efix7kq"), "/tmp/test.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	client.AddWaitlist(cmd.Context(), cid.MustParse("bafkreicsqaff7pryibb4lucdonapngzvk44nspdaoal3qn3oq55efix7kq"), "/tmp/test.txt")
 
 }
-*/
