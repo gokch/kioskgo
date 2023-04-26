@@ -2,27 +2,26 @@ package mount
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/exchange/offline"
-	"github.com/ipfs/boxo/ipld/merkledag"
-	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/stretchr/testify/require"
 )
 
-// file to unixfs ( + cid ) 기능 필요.. file <-> unixfs 필요
 func TestInitDHT(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// make file store
-	fs := file.NewFileStore("oripath")
-	fs.Put("a", file.NewWriterFromBytes([]byte("testaa"), cid.Cid{}))
-	fs.Put("b", file.NewWriterFromBytes([]byte("testbb"), cid.Cid{}))
+	fs := file.NewFileStore("rootpath")
+	oria := []byte("testaa")
+	orib := []byte("testbb")
+
+	fs.Put("a/a.txt", file.NewWriterFromBytes(oria))
+	fs.Put("b/b.txt", file.NewWriterFromBytes(orib))
 
 	// make block store
 	mds := datastore.NewMapDatastore()
@@ -33,21 +32,21 @@ func TestInitDHT(t *testing.T) {
 	mnt, err := NewMount(ctx, fs, bs, ex)
 	require.NoError(t, err)
 
-	// get cid
-	protonode := merkledag.NodeWithData([]byte("testaa"))
-	protonode.SetCidBuilder(mnt.Dag.CidBuilder)
-
-	cid := protonode.Cid()
-	require.NoError(t, err)
-	fmt.Println(cid.String())
-
-	fmt.Println(mds)
-
 	// get data from cid
-	data, err := mnt.Dag.Dagserv.Get(ctx, cid)
+	cida, err := fs.GetCid("a/a.txt")
 	require.NoError(t, err)
-	fmt.Println(data)
 
+	newa, err := mnt.Dag.Dagserv.Get(ctx, cida)
+	require.NoError(t, err)
+
+	cidb, err := fs.GetCid("b/b.txt")
+	require.NoError(t, err)
+
+	newb, err := mnt.Dag.Dagserv.Get(ctx, cidb)
+	require.NoError(t, err)
+
+	require.Equal(t, oria, newa.RawData())
+	require.Equal(t, orib, newb.RawData())
 }
 
 /*

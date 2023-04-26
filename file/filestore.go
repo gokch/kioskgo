@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/ipfs/boxo/files"
+	"github.com/ipfs/go-cid"
 )
 
 type FileStore struct {
@@ -41,19 +42,45 @@ func (f *FileStore) Put(path string, writer *Writer) error {
 		return err
 	}
 
-	// write cids
-	err = os.WriteFile(filepath.Join(filePath, DEF_PATH_CID_INFO), writer.ci.Bytes(), 0755)
+	if writer != nil {
+		err = files.WriteTo(writer.Node, fileName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (f *FileStore) PutCid(path string, ci cid.Cid) error {
+	fileName := filepath.Join(f.rootPath, path)
+	filePath := filepath.Dir(fileName)
+	err := os.MkdirAll(filePath, 0755)
 	if err != nil {
 		return err
 	}
 
-	// write file
-	return files.WriteTo(writer.Node, fileName)
+	// write cids
+	err = os.WriteFile(filepath.Join(filePath, DEF_PATH_CID_INFO), ci.Bytes(), 0755)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (f *FileStore) Get(path string) (*Reader, error) {
 	fullPath := filepath.Join(f.rootPath, path)
 	return NewReaderFromPath(fullPath), nil
+}
+
+func (f *FileStore) GetCid(path string) (cid.Cid, error) {
+	fullPath := filepath.Join(f.rootPath, path)
+
+	var ci cid.Cid
+	rawCid, err := os.ReadFile(filepath.Join(filepath.Dir(fullPath), DEF_PATH_CID_INFO))
+	if err == nil {
+		_, ci, _ = cid.CidFromBytes(rawCid)
+	}
+	return ci, nil
 }
 
 func (f *FileStore) Exist(path string) bool {
@@ -89,3 +116,8 @@ func (f *FileStore) Delete(path string) error {
 	fullPath := filepath.Join(f.rootPath, path)
 	return os.Remove(fullPath)
 }
+
+// cids
+const (
+	DEF_PATH_CID_INFO = "/.info"
+)

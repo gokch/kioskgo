@@ -49,7 +49,7 @@ func NewMount(ctx context.Context, fs *file.FileStore, bs blockstore.Blockstore,
 
 	// import blocks in Merkle-DAG from fileStore
 	err := fs.Iterate("", func(path string, reader *file.Reader) error {
-		_, err := mount.Upload(ctx, path)
+		err := mount.Upload(ctx, path)
 		if err != nil {
 			return err
 		}
@@ -73,23 +73,31 @@ func (p *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
 		return err
 	}
 
-	return p.Fs.Put(path, file.NewWriter(unixFSNode, node.Cid()))
+	// put cid
+	err = p.Fs.Put(path, file.NewWriter(unixFSNode))
+	if err != nil {
+		return err
+	}
+
+	return p.Fs.PutCid(path, ci)
 }
 
-func (p *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
+func (p *Mount) Upload(ctx context.Context, path string) error {
 	data, err := p.Fs.Get(path)
 	if err != nil {
-		return cid.Undef, err
+		return err
 	}
+
 	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := p.Dag.New(chunker.NewSizeSplitter(data, chunker.DefaultBlockSize))
+	ufsBuilder, err := p.Dag.New(chunker.NewSizeSplitter(data.ReaderFile, chunker.DefaultBlockSize))
 	if err != nil {
-		return cid.Undef, err
+		return err
 	}
 	nd, err := balanced.Layout(ufsBuilder) // Arrange the graph with a balanced layout
 	if err != nil {
-		return cid.Undef, err
+		return err
 	}
 
-	return nd.Cid(), nil
+	// put cid
+	return p.Fs.PutCid(path, nd.Cid())
 }

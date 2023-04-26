@@ -3,15 +3,12 @@ package file
 import (
 	"bytes"
 	"os"
-	"path/filepath"
 
 	"github.com/ipfs/boxo/files"
-	"github.com/ipfs/go-cid"
 )
 
 type Reader struct {
 	*files.ReaderFile
-	ci cid.Cid
 }
 
 func NewReaderFromPath(path string) *Reader {
@@ -34,41 +31,22 @@ func NewReaderFromPath(path string) *Reader {
 }
 
 func NewReader(reader *files.ReaderFile) *Reader {
-	// get cid
-	var ci cid.Cid
-	cidInfoPath := filepath.Join(filepath.Dir(reader.AbsPath()), DEF_PATH_CID_INFO)
-	rawCid, err := os.ReadFile(cidInfoPath)
-	if err == nil {
-		_, c, err := cid.CidFromBytes(rawCid)
-		if err == nil {
-			ci = c
-		}
-	}
-
 	return &Reader{
 		ReaderFile: reader,
-		ci:         ci,
 	}
 }
 
 type Writer struct {
 	files.Node
-	ci cid.Cid
 }
 
-func NewWriterFromBytes(bt []byte, ci cid.Cid) *Writer {
+func NewWriterFromBytes(bt []byte) *Writer {
 	writer := files.NewReaderFile(bytes.NewReader(bt)).(*files.ReaderFile)
-	return NewWriter(writer, ci)
+	return NewWriter(writer)
 }
 
-func NewWriter(node files.Node, ci cid.Cid) *Writer {
+func NewWriter(node files.Node) *Writer {
 	return &Writer{
 		Node: node,
-		ci:   ci,
 	}
 }
-
-// cids
-const (
-	DEF_PATH_CID_INFO = "/.info"
-)
