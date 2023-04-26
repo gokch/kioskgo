@@ -7,13 +7,14 @@ import (
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/exchange/offline"
+	"github.com/ipfs/boxo/ipld/merkledag"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/stretchr/testify/require"
 )
 
-// file to unixfs ( + cid ) 기능 필요..
+// file to unixfs ( + cid ) 기능 필요.. file <-> unixfs 필요
 func TestInitDHT(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -33,14 +34,20 @@ func TestInitDHT(t *testing.T) {
 	require.NoError(t, err)
 
 	// get cid
-	cid, err := mnt.Dag.CidBuilder.Sum([]byte("testaa"))
+	protonode := merkledag.NodeWithData([]byte("testaa"))
+	protonode.SetCidBuilder(mnt.Dag.CidBuilder)
+
+	cid := protonode.Cid()
 	require.NoError(t, err)
 	fmt.Println(cid.String())
+
+	fmt.Println(mds)
 
 	// get data from cid
 	data, err := mnt.Dag.Dagserv.Get(ctx, cid)
 	require.NoError(t, err)
 	fmt.Println(data)
+
 }
 
 /*
