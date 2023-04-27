@@ -70,6 +70,13 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 	}, nil
 }
 
+func (c *Client) Self() string {
+	if c.host == nil {
+		return ""
+	}
+	return getHostAddress(c.host)
+}
+
 func (c *Client) Connect(ctx context.Context, targetPeer string) error {
 	maddr, err := multiaddr.NewMultiaddr(targetPeer)
 	if err != nil {

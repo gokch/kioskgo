@@ -6,6 +6,7 @@ import (
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/exchange/offline"
+	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/stretchr/testify/require"
@@ -47,6 +48,10 @@ func TestInitDHT(t *testing.T) {
 
 	require.Equal(t, oria, newa.RawData())
 	require.Equal(t, orib, newb.RawData())
+
+	scida := cida.String()
+	newcida, _ := cid.Decode(scida)
+	require.Equal(t, cida, newcida)
 }
 
 /*
