@@ -54,6 +54,7 @@ func TestHostDht(t *testing.T) {
 }
 
 func TestClient(t *testing.T) {
+	// upload
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	client, err := NewClient(ctx, "", "./oripath")
@@ -64,5 +65,14 @@ func TestClient(t *testing.T) {
 
 	fmt.Println("connect | address | cid :", client.Self(), ci.String())
 
-	time.Sleep(time.Second * 10)
+	// download
+	client2, err := NewClient(ctx, "", "./cpypath")
+	require.NoError(t, err)
+
+	err = client2.Connect(ctx, client.Self())
+	require.NoError(t, err)
+
+	err = client2.mount.Download(ctx, ci, "./kokomi.png")
+	require.NoError(t, err)
+
 }
