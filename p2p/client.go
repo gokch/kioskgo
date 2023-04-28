@@ -12,11 +12,8 @@ import (
 	"github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
-	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 )
 
 // waitlist 발신 ( 수신 / 송신 )
@@ -36,17 +33,7 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 	fs := file.NewFileStore(rootPath)
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
 
-	cm, err := connmgr.NewConnManager(1, 100, connmgr.WithGracePeriod(0))
-	if err != nil {
-		return nil, err
-	}
-
-	host, err := libp2p.New(
-		libp2p.ListenAddrStrings("/ip4/127.0.0.1/tcp/0"),
-		// We'd like to set the connection manager low water to 0, but
-		// that would disable the connection manager.
-		libp2p.ConnectionManager(cm),
-	)
+	host, err := makeHost(address, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -85,11 +72,16 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 }
 
 func (c *Client) Self() string {
-	return c.bsn.Self().String()
+	return getHostAddress(c.host)
 }
 
-func (c *Client) Connect(ctx context.Context, pid peer.ID) error {
-	return c.bsn.ConnectTo(ctx, pid)
+func (c *Client) Connect(ctx context.Context, targetPeer string) error {
+	addrInfo, err := encodeAddrInfo(targetPeer)
+	if err != nil {
+		return err
+	}
+
+	return c.host.Connect(ctx, *addrInfo)
 }
 
 func (c *Client) Close() error {

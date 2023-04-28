@@ -22,21 +22,35 @@ func TestHostDht(t *testing.T) {
 	address := getHostAddress(host)
 	fmt.Println(address)
 
-	ipfsdht, err := dht.New(ctx, host, dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...))
+	// connect to bootstrap nodes
+	bootstraps := dht.GetDefaultBootstrapPeerAddrInfos()
+	for _, addrInfo := range bootstraps {
+		fmt.Println(addrInfo)
+		if err := host.Connect(ctx, addrInfo); err != nil {
+			fmt.Printf("failed to connect to bootstrap node %s: %s\n", addrInfo.ID, err)
+		}
+	}
+	fmt.Println(bootstraps)
+
+	ipfsdht, err := dht.New(ctx, host, dht.Mode(dht.ModeServer), dht.BootstrapPeers(dht.GetDefaultBootstrapPeerAddrInfos()...))
+	require.NoError(t, err)
+
+	err = ipfsdht.Bootstrap(ctx)
 	require.NoError(t, err)
 
 	self := ipfsdht.PeerID().String()
 	fmt.Println("self :", self)
 
-	pid, err := peer.Decode("QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN")
+	Newpid, err := peer.Decode("QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN")
 	require.NoError(t, err)
 
-	addrInfo, err := ipfsdht.FindPeer(ctx, pid)
+	err = ipfsdht.Ping(ctx, Newpid)
 	require.NoError(t, err)
 
-	fmt.Println(addrInfo.ID, addrInfo.Addrs)
+	ma, err := ipfsdht.FindPeer(ctx, Newpid)
+	require.NoError(t, err)
 
-	_ = ipfsdht
+	fmt.Println(ma.String())
 }
 
 func TestClient(t *testing.T) {
