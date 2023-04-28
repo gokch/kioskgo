@@ -31,20 +31,20 @@ type Client struct {
 
 func NewClient(ctx context.Context, address string, rootPath string) (*Client, error) {
 	fs := file.NewFileStore(rootPath)
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
 
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
 	host, err := makeHost(address, 0)
 	if err != nil {
 		return nil, err
 	}
 	address = getHostAddress(host)
 
-	kaddht, err := dht.New(ctx, host)
+	ipfsdht, err := dht.New(ctx, host)
 	if err != nil {
 		return nil, err
 	}
 
-	bsn := bsnet.NewFromIpfsHost(host, kaddht)
+	bsn := bsnet.NewFromIpfsHost(host, ipfsdht)
 	bswap := bitswap.New(ctx, bsn, bs)
 
 	// init bitswap

@@ -25,7 +25,6 @@ func TestHostDht(t *testing.T) {
 	// connect to bootstrap nodes
 	bootstraps := dht.GetDefaultBootstrapPeerAddrInfos()
 	for _, addrInfo := range bootstraps {
-		fmt.Println(addrInfo)
 		if err := host.Connect(ctx, addrInfo); err != nil {
 			fmt.Printf("failed to connect to bootstrap node %s: %s\n", addrInfo.ID, err)
 		}
@@ -57,7 +56,7 @@ func TestClient(t *testing.T) {
 	// upload
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	client, err := NewClient(ctx, "", "./oripath")
+	client, err := NewClient(ctx, "/ip4/192.168.45.54/tcp/51589/p2p/12D3KooWKqp7YkJm3ZsijDqp3fubUyvhuRRoFbUSnjDLMSBSPgBG", "./oripath")
 	require.NoError(t, err)
 
 	ci, err := client.mount.Upload(ctx, "./kokomi.png")
@@ -69,8 +68,10 @@ func TestClient(t *testing.T) {
 	client2, err := NewClient(ctx, "", "./cpypath")
 	require.NoError(t, err)
 
-	err = client2.Connect(ctx, client.Self())
+	err = client2.Connect(ctx, "/ip4/220.78.35.235/udp/54023/quic/p2p/12D3KooWAmuTuUwDAe4sjc1R6R4R8xpkszCfn38VH5ixiYMdnhNV")
 	require.NoError(t, err)
+
+	// ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
 
 	err = client2.mount.Download(ctx, ci, "./kokomi.png")
 	require.NoError(t, err)

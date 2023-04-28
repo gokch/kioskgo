@@ -69,7 +69,11 @@ func (f *FileStore) PutCid(path string, ci cid.Cid) error {
 
 func (f *FileStore) Get(path string) (*Reader, error) {
 	fullPath := filepath.Join(f.rootPath, path)
-	return NewReaderFromPath(fullPath), nil
+	reader := NewReaderFromPath(fullPath)
+	if reader == nil {
+		return nil, os.ErrNotExist
+	}
+	return reader, nil
 }
 
 func (f *FileStore) GetCid(path string) (cid.Cid, error) {

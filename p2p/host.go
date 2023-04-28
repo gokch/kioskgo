@@ -25,11 +25,12 @@ func makeHost(address string, listenPort int) (host host.Host, err error) {
 		if err != nil {
 			return nil, err
 		}
+
 		opts = []libp2p.Option{
 			libp2p.ConnectionManager(cm),
 			libp2p.ListenAddrs(peerAddr.Addrs...),
 		}
-	} else { // generate new hostE
+	} else { // generate new host
 		priv, _, err := crypto.GenerateKeyPairWithReader(crypto.Ed25519, 2048, rand.Reader)
 		if err != nil {
 			return nil, err
