@@ -27,7 +27,7 @@ func main() {
 }
 
 func rootRun(cmd *cobra.Command, args []string) {
-	client, err := p2p.NewClient(context.Background(), "", "client")
+	client, err := p2p.NewClient(context.Background(), "client")
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -12,17 +12,17 @@ type Reader struct {
 }
 
 func NewReaderFromPath(path string) *Reader {
-	open, err := os.Open(path)
+	file, err := os.Open(path)
 	if err != nil {
 		return nil
 	}
 
-	stat, err := os.Stat(path)
+	stat, err := file.Stat()
 	if err != nil {
 		return nil
 	}
 
-	reader, err := files.NewReaderPathFile(path, open, stat)
+	reader, err := files.NewReaderPathFile(path, file, stat)
 	if err != nil {
 		return nil
 	}

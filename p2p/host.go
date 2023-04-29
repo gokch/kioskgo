@@ -3,6 +3,8 @@ package p2p
 import (
 	"crypto/rand"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -12,34 +14,35 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
-func makeHost(address string, listenPort int) (host host.Host, err error) {
+var (
+	// sha256.Sum256([]byte("smpeople"))
+	psk = []byte{20, 174, 197, 74, 226, 233, 89, 172, 139, 157, 212, 111, 186, 100, 161, 59, 207, 51, 57, 139, 94, 184, 106, 212, 81, 159, 98, 18, 102, 118, 205, 149}
+)
+
+func makeHost(rootPath string) (host host.Host, err error) {
 	var opts []libp2p.Option
 
-	cm, err := connmgr.NewConnManager(1, 100, connmgr.WithGracePeriod(0))
+	var priv crypto.PrivKey
+	privRaw, _ := os.ReadFile(filepath.Join(rootPath, "./privkey"))
+	if privRaw == nil {
+		priv, _, err = crypto.GenerateKeyPairWithReader(crypto.Ed25519, 2048, rand.Reader)
+	} else {
+		priv, err = crypto.UnmarshalEd25519PrivateKey(privRaw)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	if address != "" { // connect to existing host
-		peerAddr, err := peer.AddrInfoFromString(address)
-		if err != nil {
-			return nil, err
-		}
+	cm, err := connmgr.NewConnManager(1, 1000, connmgr.WithGracePeriod(0))
+	if err != nil {
+		return nil, err
+	}
 
-		opts = []libp2p.Option{
-			libp2p.ConnectionManager(cm),
-			libp2p.ListenAddrs(peerAddr.Addrs...),
-		}
-	} else { // generate new host
-		priv, _, err := crypto.GenerateKeyPairWithReader(crypto.Ed25519, 2048, rand.Reader)
-		if err != nil {
-			return nil, err
-		}
-
-		opts = []libp2p.Option{
-			libp2p.ConnectionManager(cm),
-			libp2p.Identity(priv),
-		}
+	opts = []libp2p.Option{
+		libp2p.ConnectionManager(cm),
+		libp2p.PrivateNetwork(psk[:]),
+		libp2p.Identity(priv),
+		// libp2p.Transport(quic.NewTransport), // QUIC doesn't support private networks yet
 	}
 
 	host, err = libp2p.New(opts...)
@@ -47,12 +50,19 @@ func makeHost(address string, listenPort int) (host host.Host, err error) {
 		return nil, err
 	}
 
+	privRaw, err = priv.Raw()
+	if err != nil {
+		return nil, err
+	}
+	os.WriteFile(filepath.Join(rootPath, "./privkey"), privRaw, 0644)
+
 	return host, nil
 }
 
 func getHostAddress(h host.Host) string {
 	addrInfo := host.InfoFromHost(h)
 	addr := addrInfo.Addrs[0]
+
 	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", addrInfo.ID.String()))
 
 	return addr.Encapsulate(hostAddr).String()

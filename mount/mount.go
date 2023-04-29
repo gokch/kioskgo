@@ -72,9 +72,10 @@ func (p *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
 	if err != nil {
 		return err
 	}
+	defer unixFSNode.Close()
 
 	// put cid
-	err = p.Fs.Put(path, file.NewWriter(unixFSNode))
+	err = p.Fs.Overwrite(path, file.NewWriter(unixFSNode))
 	if err != nil {
 		return err
 	}
@@ -87,6 +88,7 @@ func (p *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
 	if err != nil {
 		return cid.Cid{}, err
 	}
+	defer data.Close()
 
 	// Split the file up into fixed sized 256KiB chunks
 	ufsBuilder, err := p.Dag.New(chunker.NewSizeSplitter(data.ReaderFile, chunker.DefaultBlockSize))

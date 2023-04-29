@@ -22,6 +22,7 @@ type Client struct {
 	Client *client.Client
 
 	host  host.Host
+	addr  string
 	bsn   bsnet.BitSwapNetwork
 	bswap *bitswap.Bitswap
 
@@ -29,15 +30,14 @@ type Client struct {
 	waitlist *file.FileManager // 다운로드 대기 목록
 }
 
-func NewClient(ctx context.Context, address string, rootPath string) (*Client, error) {
+func NewClient(ctx context.Context, rootPath string) (*Client, error) {
 	fs := file.NewFileStore(rootPath)
 
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
-	host, err := makeHost(address, 0)
+	host, err := makeHost(rootPath)
 	if err != nil {
 		return nil, err
 	}
-	address = getHostAddress(host)
 
 	ipfsdht, err := dht.New(ctx, host)
 	if err != nil {
@@ -65,6 +65,7 @@ func NewClient(ctx context.Context, address string, rootPath string) (*Client, e
 		havelist: havelist,
 		mount:    mount,
 		host:     host,
+		addr:     getHostAddress(host),
 		bsn:      bsn,
 		bswap:    bswap,
 		Client:   bswap.Client,
