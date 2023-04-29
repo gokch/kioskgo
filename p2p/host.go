@@ -2,9 +2,8 @@ package p2p
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -19,14 +18,15 @@ var (
 	psk = []byte{20, 174, 197, 74, 226, 233, 89, 172, 139, 157, 212, 111, 186, 100, 161, 59, 207, 51, 57, 139, 94, 184, 106, 212, 81, 159, 98, 18, 102, 118, 205, 149}
 )
 
-func makeHost(rootPath string) (host host.Host, err error) {
+func makeHost(privateKey string) (host host.Host, err error) {
 	var opts []libp2p.Option
 
 	var priv crypto.PrivKey
-	privRaw, _ := os.ReadFile(filepath.Join(rootPath, "./privkey"))
-	if privRaw == nil {
+
+	if privateKey == "" {
 		priv, _, err = crypto.GenerateKeyPairWithReader(crypto.Ed25519, 2048, rand.Reader)
 	} else {
+		privRaw, _ := base64.StdEncoding.DecodeString(privateKey)
 		priv, err = crypto.UnmarshalEd25519PrivateKey(privRaw)
 	}
 	if err != nil {
@@ -50,18 +50,14 @@ func makeHost(rootPath string) (host host.Host, err error) {
 		return nil, err
 	}
 
-	privRaw, err = priv.Raw()
-	if err != nil {
-		return nil, err
-	}
-	os.WriteFile(filepath.Join(rootPath, "./privkey"), privRaw, 0644)
+	raw, _ := priv.Raw()
+	fmt.Println(base64.StdEncoding.EncodeToString(raw))
 
 	return host, nil
 }
 
 func getHostAddress(h host.Host) string {
 	addrInfo := host.InfoFromHost(h)
-	fmt.Println("addrs :", addrInfo.Addrs)
 	addr := addrInfo.Addrs[0]
 
 	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", addrInfo.ID.String()))

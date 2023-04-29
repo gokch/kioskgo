@@ -15,23 +15,31 @@ import (
 	"github.com/libp2p/go-libp2p/core/host"
 )
 
+type ClientConfig struct {
+	RootPath   string
+	Peers      []string
+	PrivateKey string
+}
+
 // waitlist 발신 ( 수신 / 송신 )
 type Client struct {
 	mount    *mount.Mount
-	havelist *file.FileManager // 현재 보유 목록
 	waitlist *file.FileManager // 다운로드 대기 목록
 
 	host  host.Host
 	bswap *bitswap.Bitswap
 }
 
-func NewClient(ctx context.Context, rootPath string) (*Client, error) {
+func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	// init fs
-	fs := file.NewFileStore(rootPath)
+	fs := file.NewFileStore(cfg.RootPath)
+
+	// init waitlist, havelist
+	waitlist := file.NewFileManager(cfg.RootPath)
 
 	// init memory bs for dht
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
-	host, err := makeHost(rootPath)
+	host, err := makeHost(cfg.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -53,17 +61,22 @@ func NewClient(ctx context.Context, rootPath string) (*Client, error) {
 		return nil, err
 	}
 
-	// init waitlist, havelist
-	waitlist := file.NewFileManager(rootPath)
-	havelist := file.NewFileManager(rootPath)
-
-	return &Client{
+	c := &Client{
 		waitlist: waitlist,
-		havelist: havelist,
 		mount:    mount,
 		host:     host,
 		bswap:    bswap,
-	}, nil
+	}
+
+	// connect
+	for _, peer := range cfg.Peers {
+		err := c.Connect(ctx, peer)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
 }
 
 func (c *Client) Self() string {
@@ -94,12 +107,6 @@ func (c *Client) AddWaitlist(ctx context.Context, cid cid.Cid, path string) {
 	c.waitlist.Put(path, cid)
 }
 
-// 1. waitlist 에서 요청한 cid 를 다운로드 받았을 경우
-// 2. 새로운 cid 를 가진 파일을 피어에 올릴 경우
-func (c *Client) AddHavelist(ctx context.Context, cid cid.Cid, path string) {
-	c.havelist.Put(path, cid)
-}
-
 func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) error {
 	err := c.mount.Download(ctx, cid, path)
 	if err != nil {
@@ -108,7 +115,6 @@ func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) err
 
 	// 다운로드가 끝났을 시 waitlist 에서 지운다 + havelist 에 추가한다
 	c.waitlist.Delete(path, cid)
-	c.AddHavelist(ctx, cid, path)
 
 	return nil
 }
