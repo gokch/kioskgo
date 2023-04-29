@@ -112,14 +112,19 @@ func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) err
 	if err != nil {
 		return err
 	}
+	// TODO : wantlist 삭제, BlockReceivedNotifier 콜백 사용
+	// c.bswap.Client.ReceiveMessage()
 
-	// 다운로드가 끝났을 시 waitlist 에서 지운다 + havelist 에 추가한다
+	// 다운로드가 끝났을 시 waitlist 에서 지운다
 	c.waitlist.Delete(path, cid)
-
 	return nil
 }
 
-// peer 에 제공? - TODO: IPNS 를 통해 고유값 지정이 필요!!
-func (c *Client) RecvUpload(ctx context.Context, path string) {
-	c.mount.Upload(ctx, path)
+// peer 에 제공?
+func (c *Client) RecvUpload(ctx context.Context, path string) (cid.Cid, error) {
+	ci, err := c.mount.Upload(ctx, path)
+	if err != nil {
+		return cid.Cid{}, err
+	}
+	return ci, nil
 }
