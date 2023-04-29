@@ -10,7 +10,11 @@ import (
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-nat"
+	"github.com/multiformats/go-multiaddr"
 	"github.com/stretchr/testify/require"
+
+	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 )
 
 func TestHostDht(t *testing.T) {
@@ -77,6 +81,13 @@ func TestClient(t *testing.T) {
 
 }
 
+func TestIPv6(t *testing.T) {
+	maddr, err := multiaddr.NewMultiaddr("/ip6/::/tcp/0")
+	require.NoError(t, err)
+
+	fmt.Println(maddr)
+}
+
 func TestForwarding(t *testing.T) {
 	listenAddr, err := net.ResolveUDPAddr("udp6", "[::]:0")
 	require.NoError(t, err)
@@ -88,4 +99,41 @@ func TestForwarding(t *testing.T) {
 
 	fmt.Printf("Forwarding address: /ip6/%s/udp/%d/quic\n", listener.LocalAddr().(*net.UDPAddr).IP.String(), listener.LocalAddr().(*net.UDPAddr).Port)
 
+}
+
+func TestNat(t *testing.T) {
+
+	ctx := context.Background()
+	na, err := nat.DiscoverGateway(ctx)
+	require.NoError(t, err)
+	fmt.Println("수신됨 :", na)
+	if na != nil {
+		fmt.Println(na.Type())
+	}
+
+	// nat := nat.DiscoverNATs(ctx)
+
+	// select {
+	// case n := <-nat:
+	// 	fmt.Println("수신됨 :", n)
+	// 	if n != nil {
+	// 		fmt.Println(n.Type())
+	// 	}
+	// case <-time.After(time.Second * 3000):
+	// 	fmt.Println("timeout")
+	// }
+
+}
+
+func TestAutoNat(t *testing.T) {
+	host, err := libp2p.New()
+	require.NoError(t, err)
+	// Autonat 기능을 사용하여 public IP를 가져옵니다.
+	autonatService, err := autonat.New(host)
+	fmt.Println(autonatService.Status())
+
+	publicAddr, err := autonatService.PublicAddr()
+	require.NoError(t, err)
+
+	fmt.Println(publicAddr.MarshalJSON())
 }

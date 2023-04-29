@@ -18,6 +18,7 @@ require (
 	github.com/dghubble/trie v0.0.0-20230228185955-dca8fa4fd7f8
 	github.com/ipfs/go-ipfs-blockstore v1.3.0
 	github.com/libp2p/go-libp2p-kad-dht v0.21.1
+	github.com/libp2p/go-nat v0.1.0
 	github.com/spf13/cobra v1.7.0
 )
 
@@ -85,7 +86,6 @@ require (
 	github.com/libp2p/go-libp2p-kbucket v0.5.0 // indirect
 	github.com/libp2p/go-libp2p-record v0.2.0 // indirect
 	github.com/libp2p/go-msgio v0.3.0 // indirect
-	github.com/libp2p/go-nat v0.1.0 // indirect
 	github.com/libp2p/go-netroute v0.2.1 // indirect
 	github.com/libp2p/go-reuseport v0.2.0 // indirect
 	github.com/libp2p/go-yamux/v4 v4.0.0 // indirect

@@ -61,6 +61,7 @@ func makeHost(rootPath string) (host host.Host, err error) {
 
 func getHostAddress(h host.Host) string {
 	addrInfo := host.InfoFromHost(h)
+	fmt.Println("addrs :", addrInfo.Addrs)
 	addr := addrInfo.Addrs[0]
 
 	hostAddr, _ := multiaddr.NewMultiaddr(fmt.Sprintf("/p2p/%s", addrInfo.ID.String()))
