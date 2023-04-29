@@ -75,16 +75,16 @@ func TestClient(t *testing.T) {
 	fmt.Println("connect | address | cid :", client.Self(), ci.String())
 
 	// download
-	// client2, err := NewClient(ctx, &ClientConfig{
-	// 	RootPath:   "./cpypath",
-	// 	Peers:      []string{""},
-	// 	PrivateKey: "uiUuAgVBbrhaVj4T1Nj4GO/AMAU2fKCXnE6EAv4czhROfQ2MyIdRNo9B3V48GIJ/+BqubAjg6qRlRBS+9PL3ig==",
-	// })
-	// require.NoError(t, err)
+	client2, err := NewClient(ctx, &ClientConfig{
+		RootPath:   "./cpypath",
+		Peers:      []string{client.Self()},
+		PrivateKey: "uiUuAgVBbrhaVj4T1Nj4GO/AMAU2fKCXnE6EAv4czhROfQ2MyIdRNo9B3V48GIJ/+BqubAjg6qRlRBS+9PL3ig==",
+	})
+	require.NoError(t, err)
 
 	// ci := cid.MustParse("")
-	// err = client2.mount.Download(ctx, ci, "kokomi.png")
-	// require.NoError(t, err)
+	err = client2.mount.Download(ctx, ci, "kokomi.png")
+	require.NoError(t, err)
 
 	time.Sleep(time.Second * 600)
 }
