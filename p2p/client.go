@@ -41,8 +41,11 @@ func NewClient(ctx context.Context, rootPath string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// init bitswap network
 	bsn := bsnet.NewFromIpfsHost(host, ipfsdht)
 	bswap := bitswap.New(ctx, bsn, bs)
+	bsn.Start(bswap)
 
 	// init mount
 	mount, err := mount.NewMount(ctx, fs, bs, bswap)
@@ -53,9 +56,6 @@ func NewClient(ctx context.Context, rootPath string) (*Client, error) {
 	// init waitlist, havelist
 	waitlist := file.NewFileManager(rootPath)
 	havelist := file.NewFileManager(rootPath)
-
-	// start bitswap network
-	bsn.Start(bswap)
 
 	return &Client{
 		waitlist: waitlist,

@@ -40,7 +40,7 @@ func makeHost(rootPath string) (host host.Host, err error) {
 
 	opts = []libp2p.Option{
 		libp2p.ConnectionManager(cm),
-		libp2p.PrivateNetwork(psk[:]),
+		libp2p.PrivateNetwork(psk),
 		libp2p.Identity(priv),
 		// libp2p.Transport(quic.NewTransport), // QUIC doesn't support private networks yet
 	}
