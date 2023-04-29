@@ -19,8 +19,6 @@ var (
 )
 
 func makeHost(privateKey string) (host host.Host, err error) {
-	var opts []libp2p.Option
-
 	var priv crypto.PrivKey
 
 	if privateKey == "" {
@@ -38,7 +36,7 @@ func makeHost(privateKey string) (host host.Host, err error) {
 		return nil, err
 	}
 
-	opts = []libp2p.Option{
+	opts := []libp2p.Option{
 		libp2p.ConnectionManager(cm),
 		libp2p.PrivateNetwork(psk),
 		libp2p.Identity(priv),
@@ -50,8 +48,8 @@ func makeHost(privateKey string) (host host.Host, err error) {
 		return nil, err
 	}
 
-	raw, _ := priv.Raw()
-	fmt.Println(base64.StdEncoding.EncodeToString(raw))
+	// raw, _ := priv.Raw()
+	// fmt.Println(base64.StdEncoding.EncodeToString(raw))
 
 	return host, nil
 }
