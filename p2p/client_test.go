@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -58,27 +59,30 @@ func TestHostDht(t *testing.T) {
 }
 
 func TestClient(t *testing.T) {
-	// upload
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	client, err := NewClient(ctx, "./oripath")
-	require.NoError(t, err)
 
-	ci, err := client.mount.Upload(ctx, "kokomi.png")
-	require.NoError(t, err)
+	// upload
+	// client, err := NewClient(ctx, "./oripath")
+	// require.NoError(t, err)
 
-	fmt.Println("connect | address | cid :", client.Self(), ci.String())
+	// ci, err := client.mount.Upload(ctx, "kokomi.png")
+	// require.NoError(t, err)
+
+	// fmt.Println("connect | address | cid :", client.Self(), ci.String())
 
 	// download
 	client2, err := NewClient(ctx, "./cpypath")
 	require.NoError(t, err)
 
-	err = client2.Connect(ctx, client.Self())
+	err = client2.Connect(ctx, "")
 	require.NoError(t, err)
 
+	ci := cid.MustParse("")
 	err = client2.mount.Download(ctx, ci, "kokomi.png")
 	require.NoError(t, err)
 
+	time.Sleep(time.Second * 100)
 }
 
 func TestIPv6(t *testing.T) {
