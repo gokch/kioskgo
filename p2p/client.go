@@ -6,7 +6,6 @@ import (
 	"github.com/gokch/kioskgo/file"
 	"github.com/gokch/kioskgo/mount"
 	"github.com/ipfs/boxo/bitswap"
-	"github.com/ipfs/boxo/bitswap/client"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
@@ -18,36 +17,34 @@ import (
 
 // waitlist 발신 ( 수신 / 송신 )
 type Client struct {
-	mount  *mount.Mount
-	Client *client.Client
-
-	host  host.Host
-	addr  string
-	bsn   bsnet.BitSwapNetwork
-	bswap *bitswap.Bitswap
-
+	mount    *mount.Mount
 	havelist *file.FileManager // 현재 보유 목록
 	waitlist *file.FileManager // 다운로드 대기 목록
+
+	host  host.Host
+	bswap *bitswap.Bitswap
 }
 
 func NewClient(ctx context.Context, rootPath string) (*Client, error) {
+	// init fs
 	fs := file.NewFileStore(rootPath)
 
+	// init memory bs for dht
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
 	host, err := makeHost(rootPath)
 	if err != nil {
 		return nil, err
 	}
 
+	// init dht for bitswap network
 	ipfsdht, err := dht.New(ctx, host)
 	if err != nil {
 		return nil, err
 	}
-
 	bsn := bsnet.NewFromIpfsHost(host, ipfsdht)
 	bswap := bitswap.New(ctx, bsn, bs)
 
-	// init bitswap
+	// init mount
 	mount, err := mount.NewMount(ctx, fs, bs, bswap)
 	if err != nil {
 		return nil, err
@@ -57,7 +54,7 @@ func NewClient(ctx context.Context, rootPath string) (*Client, error) {
 	waitlist := file.NewFileManager(rootPath)
 	havelist := file.NewFileManager(rootPath)
 
-	// start server
+	// start bitswap network
 	bsn.Start(bswap)
 
 	return &Client{
@@ -65,10 +62,7 @@ func NewClient(ctx context.Context, rootPath string) (*Client, error) {
 		havelist: havelist,
 		mount:    mount,
 		host:     host,
-		addr:     getHostAddress(host),
-		bsn:      bsn,
 		bswap:    bswap,
-		Client:   bswap.Client,
 	}, nil
 }
 
