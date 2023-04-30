@@ -62,36 +62,36 @@ func NewMount(ctx context.Context, fs *file.FileStore, bs blockstore.Blockstore,
 	return mount, nil
 }
 
-func (p *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
-	node, err := p.Dag.Dagserv.Get(ctx, ci)
+func (m *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
+	node, err := m.Dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err
 	}
 
-	unixFSNode, err := unixfile.NewUnixfsFile(ctx, p.Dag.Dagserv, node)
+	unixFSNode, err := unixfile.NewUnixfsFile(ctx, m.Dag.Dagserv, node)
 	if err != nil {
 		return err
 	}
 	defer unixFSNode.Close()
 
-	// put cid
-	err = p.Fs.Overwrite(path, file.NewWriter(unixFSNode))
+	err = m.Fs.Overwrite(path, file.NewWriter(unixFSNode))
 	if err != nil {
 		return err
 	}
 
-	return p.Fs.PutCid(path, ci)
+	// put cid
+	return m.Fs.PutCid(path, ci)
 }
 
-func (p *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
-	data, err := p.Fs.Get(path)
+func (m *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
+	data, err := m.Fs.Get(path)
 	if err != nil {
 		return cid.Cid{}, err
 	}
 	defer data.Close()
 
 	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := p.Dag.New(chunker.NewSizeSplitter(data.ReaderFile, chunker.DefaultBlockSize))
+	ufsBuilder, err := m.Dag.New(chunker.NewSizeSplitter(data.ReaderFile, chunker.DefaultBlockSize))
 	if err != nil {
 		return cid.Cid{}, err
 	}
@@ -102,7 +102,7 @@ func (p *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
 
 	// put cid
 	ci := nd.Cid()
-	err = p.Fs.PutCid(path, ci)
+	err = m.Fs.PutCid(path, ci)
 	if err != nil {
 		return ci, err
 	}
