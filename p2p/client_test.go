@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -62,27 +63,27 @@ func TestClient(t *testing.T) {
 	defer cancel()
 
 	// upload
-	client, err := NewClient(ctx, &ClientConfig{
-		RootPath:   "./oripath",
-		Peers:      []string{},
-		PrivateKey: "0m41VeDOY3Zd9XZmuvFLj9D6Xn2dFo7/MoGa501f3Y9HAuE+gX7Lk6J8/FQ/6X21gyRxqe+VMkCSLq69F85ZwQ==",
-	})
-	require.NoError(t, err)
+	// client, err := NewClient(ctx, &ClientConfig{
+	// 	RootPath:   "./oripath",
+	// 	Peers:      []string{},
+	// 	PrivateKey: "0m41VeDOY3Zd9XZmuvFLj9D6Xn2dFo7/MoGa501f3Y9HAuE+gX7Lk6J8/FQ/6X21gyRxqe+VMkCSLq69F85ZwQ==",
+	// })
+	// require.NoError(t, err)
 
-	ci, err := client.mount.Upload(ctx, "kokomi.png")
-	require.NoError(t, err)
+	// ci, err := client.mount.Upload(ctx, "kokomi.png")
+	// require.NoError(t, err)
 
-	fmt.Println("connect | address | cid :", client.Self(), ci.String())
+	// fmt.Println("connect | address | cid :", client.Self(), ci.String())
 
 	// download
 	client2, err := NewClient(ctx, &ClientConfig{
 		RootPath:   "./cpypath",
-		Peers:      []string{client.Self()},
+		Peers:      []string{"/ip4/220.78.35.235/tcp/10880/p2p/12D3KooWEbZfNH6yysYJrkZJPwrUG8FrFDe169KFoWAWHAM2zdNx"},
 		PrivateKey: "uiUuAgVBbrhaVj4T1Nj4GO/AMAU2fKCXnE6EAv4czhROfQ2MyIdRNo9B3V48GIJ/+BqubAjg6qRlRBS+9PL3ig==",
 	})
 	require.NoError(t, err)
 
-	// ci := cid.MustParse("")
+	ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
 	err = client2.mount.Download(ctx, ci, "kokomi.png")
 	require.NoError(t, err)
 

@@ -34,7 +34,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	// init fs
 	fs := file.NewFileStore(cfg.RootPath)
 
-	// init waitlist, havelist
+	// init waitlist
 	waitlist := file.NewFileManager(cfg.RootPath)
 
 	// init memory bs for dht
