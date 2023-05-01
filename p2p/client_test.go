@@ -84,6 +84,8 @@ func TestClient(t *testing.T) {
 	// require.NoError(t, err)
 
 	time.Sleep(time.Second * 1200)
+
+	client.Close()
 }
 
 func TestForwarding(t *testing.T) {
