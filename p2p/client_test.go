@@ -83,7 +83,7 @@ func TestClient(t *testing.T) {
 	// err = client2.mount.Download(ctx, ci, "nilou.mp4")
 	// require.NoError(t, err)
 
-	time.Sleep(time.Second * 600)
+	time.Sleep(time.Second * 1200)
 }
 
 func TestForwarding(t *testing.T) {

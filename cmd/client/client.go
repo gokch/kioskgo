@@ -92,11 +92,6 @@ func rootRun(cmd *cobra.Command, args []string) {
 	handleKillSig(func() {
 		client.Close()
 	}, &logger)
-
-	for {
-		time.Sleep(time.Second)
-	}
-
 }
 
 func handleKillSig(handler func(), logger *zerolog.Logger) {
