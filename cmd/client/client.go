@@ -101,10 +101,6 @@ func rootRun(cmd *cobra.Command, args []string) {
 		client.Close()
 	}, logger)
 
-	for client.MQ.Running() > 0 {
-		time.Sleep(time.Second)
-	}
-
 	client.Close()
 	logger.Info("download is all done")
 }

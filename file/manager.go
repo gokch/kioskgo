@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/dghubble/trie"
+	"github.com/ipfs/boxo/ipld/unixfs"
 	"github.com/ipfs/go-cid"
 )
 
@@ -46,6 +47,7 @@ func (fm *FileManager) Put(path string, ci cid.Cid) {
 }
 
 func (fm *FileManager) Delete(path string, ci cid.Cid) {
+	unixfs.NewFSNode()
 	// del paths
 	pathWithCid := filepath.Join(path, ci.String())
 	fm.paths.Delete(pathWithCid)
