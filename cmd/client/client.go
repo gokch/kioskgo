@@ -87,11 +87,16 @@ func rootRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	logger.Info().Msg("download is all done")
-
 	handleKillSig(func() {
 		client.Close()
 	}, &logger)
+
+	for client.MQ.Running() > 0 {
+		time.Sleep(time.Second)
+	}
+
+	client.Close()
+	logger.Info().Msg("download is all done")
 }
 
 func handleKillSig(handler func(), logger *zerolog.Logger) {

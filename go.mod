@@ -19,6 +19,7 @@ require (
 	github.com/ipfs/go-ipfs-blockstore v1.3.0
 	github.com/libp2p/go-libp2p-kad-dht v0.21.1
 	github.com/libp2p/go-nat v0.1.0
+	github.com/panjf2000/ants v1.3.0
 	github.com/spf13/cobra v1.7.0
 )
 

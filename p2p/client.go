@@ -2,6 +2,8 @@ package p2p
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/gokch/kioskgo/mount"
@@ -13,17 +15,20 @@ import (
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/panjf2000/ants"
 )
 
 type ClientConfig struct {
-	RootPath string
-	Peers    []string
+	RootPath  string
+	Peers     []string
+	Worker    int
+	ExpireSec int
 }
 
 // waitlist 발신 ( 수신 / 송신 )
 type Client struct {
-	mount    *mount.Mount
-	waitlist *file.FileManager // 다운로드 대기 목록
+	mount *mount.Mount
+	MQ    *ants.Pool
 
 	host  host.Host
 	bswap *bitswap.Bitswap
@@ -32,9 +37,6 @@ type Client struct {
 func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	// init fs
 	fs := file.NewFileStore(cfg.RootPath)
-
-	// init waitlist
-	waitlist := file.NewFileManager(cfg.RootPath)
 
 	// init memory bs for dht
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
@@ -60,11 +62,17 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
+	mq, err := ants.NewPool(cfg.Worker, ants.WithExpiryDuration(time.Second*time.Duration(cfg.ExpireSec)))
+	if err != nil {
+		return nil, err
+	}
+
 	c := &Client{
-		waitlist: waitlist,
-		mount:    mount,
-		host:     host,
-		bswap:    bswap,
+		mount: mount,
+		MQ:    mq,
+
+		host:  host,
+		bswap: bswap,
 	}
 
 	// connect
@@ -92,6 +100,8 @@ func (c *Client) Connect(ctx context.Context, targetPeer string) error {
 }
 
 func (c *Client) Close() error {
+	c.MQ.Release()
+
 	if err := c.bswap.Close(); err != nil {
 		return err
 	}
@@ -101,27 +111,24 @@ func (c *Client) Close() error {
 	return nil
 }
 
-// 1. TODO : Channel 로 변경
 func (c *Client) ReqDownload(ctx context.Context, cid cid.Cid, path string) error {
-	c.waitlist.Put(path, cid)
-	err := c.mount.Download(ctx, cid, path)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.MQ.Submit(func() {
+		err := c.mount.Download(ctx, cid, path)
+		if err != nil {
+			fmt.Println("download not finished")
+		} else {
+			fmt.Println("download finished")
+		}
+	})
 }
 
-func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) error {
-	// 다운로드가 끝났을 시 waitlist 에서 지운다
-	c.waitlist.Delete(path, cid)
-	return nil
-}
-
-// peer 에 제공?
-func (c *Client) RecvUpload(ctx context.Context, path string) (cid.Cid, error) {
-	ci, err := c.mount.Upload(ctx, path)
-	if err != nil {
-		return cid.Cid{}, err
-	}
-	return ci, nil
+func (c *Client) ReqUpload(ctx context.Context, cid cid.Cid, path string) error {
+	return c.MQ.Submit(func() {
+		cid, err := c.mount.Upload(ctx, path)
+		if err != nil {
+			fmt.Println("upload not finished")
+		} else {
+			fmt.Println("upload finished | cid : ", cid.String())
+		}
+	})
 }
