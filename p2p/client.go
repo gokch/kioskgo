@@ -19,10 +19,10 @@ import (
 )
 
 type ClientConfig struct {
-	RootPath  string
-	Peers     []string
-	Worker    int
-	ExpireSec int
+	RootPath   string
+	Peers      []string
+	SizeWorker int
+	ExpireSec  int
 }
 
 // waitlist 발신 ( 수신 / 송신 )
@@ -62,7 +62,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
-	mq, err := ants.NewPool(cfg.Worker, ants.WithExpiryDuration(time.Second*time.Duration(cfg.ExpireSec)))
+	mq, err := ants.NewPool(cfg.SizeWorker, ants.WithExpiryDuration(time.Second*time.Duration(cfg.ExpireSec)))
 	if err != nil {
 		return nil, err
 	}

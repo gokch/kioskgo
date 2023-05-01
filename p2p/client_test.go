@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ipfs/go-log"
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -60,10 +61,14 @@ func TestClient(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	log.SetLogLevel("*", "debug")
+
 	// upload
 	client, err := NewClient(ctx, &ClientConfig{
-		RootPath: "./oripath",
-		Peers:    []string{},
+		RootPath:   "./oripath",
+		Peers:      []string{},
+		SizeWorker: 1,
+		ExpireSec:  600,
 	})
 	require.NoError(t, err)
 
@@ -76,10 +81,12 @@ func TestClient(t *testing.T) {
 	// client2, err := NewClient(ctx, &ClientConfig{
 	// 	RootPath:   "./cpypath",
 	// 	Peers:      []string{client.Self()},
+	// 	SizeWorker: 1,
+	// 	ExpireSec:  600,
 	// })
 	// require.NoError(t, err)
 
-	// ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
+	// // ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
 	// err = client2.mount.Download(ctx, ci, "nilou.mp4")
 	// require.NoError(t, err)
 
