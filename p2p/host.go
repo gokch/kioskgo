@@ -2,8 +2,9 @@ package p2p
 
 import (
 	"crypto/rand"
-	"encoding/base64"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/crypto"
@@ -14,18 +15,20 @@ import (
 )
 
 var (
+	privKeyFileName = ".key"
 	// sha256.Sum256([]byte("smpeople"))
 	psk = []byte{20, 174, 197, 74, 226, 233, 89, 172, 139, 157, 212, 111, 186, 100, 161, 59, 207, 51, 57, 139, 94, 184, 106, 212, 81, 159, 98, 18, 102, 118, 205, 149}
 )
 
-func makeHost(privateKey string) (host host.Host, err error) {
-	var priv crypto.PrivKey
+func makeHost(rootPath string) (host host.Host, err error) {
+	privKey, _ := os.ReadFile(filepath.Join(rootPath, privKeyFileName))
 
-	if privateKey == "" {
+	var priv crypto.PrivKey
+	if privKey == nil {
 		priv, _, err = crypto.GenerateKeyPairWithReader(crypto.Ed25519, 2048, rand.Reader)
+		privKey, _ = priv.Raw()
 	} else {
-		privRaw, _ := base64.StdEncoding.DecodeString(privateKey)
-		priv, err = crypto.UnmarshalEd25519PrivateKey(privRaw)
+		priv, err = crypto.UnmarshalEd25519PrivateKey(privKey)
 	}
 	if err != nil {
 		return nil, err
@@ -47,6 +50,12 @@ func makeHost(privateKey string) (host host.Host, err error) {
 	if err != nil {
 		return nil, err
 	}
+
+	err = os.WriteFile(filepath.Join(rootPath, privKeyFileName), privKey, 0755)
+	if err != nil {
+		return nil, err
+	}
+
 	return host, nil
 }
 

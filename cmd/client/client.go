@@ -24,10 +24,9 @@ var (
 		Peers:    []string{},
 	}
 
-	logger     = &zerolog.Logger{}
-	rootPath   string
-	privateKey string
-	timeout    int64
+	logger   = &zerolog.Logger{}
+	rootPath string
+	timeout  int64
 
 	peerIds []string
 	cids    []string
@@ -37,7 +36,6 @@ var (
 func init() {
 	fs := rootCmd.PersistentFlags()
 	fs.StringVarP(&rootPath, "rootpath", "r", "./", "root path")
-	fs.StringVarP(&privateKey, "key", "k", "", "private key")
 	fs.Int64VarP(&timeout, "timeout", "t", 0, "timeout seconds, 0 is no timeout")
 	fs.StringArrayVar(&peerIds, "peers", []string{}, "connect peer id")
 	fs.StringArrayVarP(&cids, "cids", "c", []string{}, "download cid")
@@ -67,19 +65,21 @@ func rootRun(cmd *cobra.Command, args []string) {
 	logger.Info().Msg("start client")
 
 	client, err := p2p.NewClient(context.Background(), &p2p.ClientConfig{
-		RootPath:   rootPath,
-		Peers:      peerIds,
-		PrivateKey: privateKey,
+		RootPath: rootPath,
+		Peers:    peerIds,
 	})
 	if err != nil {
 		logger.Warn().Err(err).Msg("init clinet is failed")
 		return
 	}
-	defer client.Close()
 
 	for i := range cids {
 		path := paths[i]
-		ci := cid.MustParse(cids[i])
+		ci, err := cid.Parse(cids[i])
+		if err != nil {
+			logger.Warn().Err(err).Str("cid", cids[i]).Msg("invalid cld")
+			return
+		}
 		err = client.ReqDownload(ctx, ci, path)
 		if err != nil {
 			logger.Warn().Err(err).Str("cid", cids[i]).Msg("get cld is failed")

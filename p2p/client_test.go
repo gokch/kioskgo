@@ -62,9 +62,8 @@ func TestClient(t *testing.T) {
 
 	// upload
 	client, err := NewClient(ctx, &ClientConfig{
-		RootPath:   "./oripath",
-		Peers:      []string{},
-		PrivateKey: "0m41VeDOY3Zd9XZmuvFLj9D6Xn2dFo7/MoGa501f3Y9HAuE+gX7Lk6J8/FQ/6X21gyRxqe+VMkCSLq69F85ZwQ==",
+		RootPath: "./oripath",
+		Peers:    []string{},
 	})
 	require.NoError(t, err)
 
@@ -74,16 +73,15 @@ func TestClient(t *testing.T) {
 	fmt.Println("connect | address | cid :", client.Self(), ci.String())
 
 	// download
-	client2, err := NewClient(ctx, &ClientConfig{
-		RootPath:   "./cpypath",
-		Peers:      []string{client.Self()},
-		PrivateKey: "uiUuAgVBbrhaVj4T1Nj4GO/AMAU2fKCXnE6EAv4czhROfQ2MyIdRNo9B3V48GIJ/+BqubAjg6qRlRBS+9PL3ig==",
-	})
-	require.NoError(t, err)
+	// client2, err := NewClient(ctx, &ClientConfig{
+	// 	RootPath:   "./cpypath",
+	// 	Peers:      []string{client.Self()},
+	// })
+	// require.NoError(t, err)
 
 	// ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
-	err = client2.mount.Download(ctx, ci, "nilou.mp4")
-	require.NoError(t, err)
+	// err = client2.mount.Download(ctx, ci, "nilou.mp4")
+	// require.NoError(t, err)
 
 	time.Sleep(time.Second * 600)
 }

@@ -16,9 +16,8 @@ import (
 )
 
 type ClientConfig struct {
-	RootPath   string
-	Peers      []string
-	PrivateKey string
+	RootPath string
+	Peers    []string
 }
 
 // waitlist 발신 ( 수신 / 송신 )
@@ -39,7 +38,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 
 	// init memory bs for dht
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
-	host, err := makeHost(cfg.PrivateKey)
+	host, err := makeHost(cfg.RootPath)
 	if err != nil {
 		return nil, err
 	}
