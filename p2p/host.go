@@ -47,10 +47,6 @@ func makeHost(privateKey string) (host host.Host, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// raw, _ := priv.Raw()
-	// fmt.Println(base64.StdEncoding.EncodeToString(raw))
-
 	return host, nil
 }
 

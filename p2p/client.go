@@ -102,19 +102,17 @@ func (c *Client) Close() error {
 	return nil
 }
 
-// 1. 클라이언트가 특정 피어를 가지고 싶다고 요청
-func (c *Client) AddWaitlist(ctx context.Context, cid cid.Cid, path string) {
+// 1. TODO : Channel 로 변경
+func (c *Client) ReqDownload(ctx context.Context, cid cid.Cid, path string) error {
 	c.waitlist.Put(path, cid)
-}
-
-func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) error {
 	err := c.mount.Download(ctx, cid, path)
 	if err != nil {
 		return err
 	}
-	// TODO : wantlist 삭제, BlockReceivedNotifier 콜백 사용
-	// c.bswap.Client.ReceiveMessage()
+	return nil
+}
 
+func (c *Client) RecvDownload(ctx context.Context, cid cid.Cid, path string) error {
 	// 다운로드가 끝났을 시 waitlist 에서 지운다
 	c.waitlist.Delete(path, cid)
 	return nil
