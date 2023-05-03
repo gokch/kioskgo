@@ -11,7 +11,6 @@ import (
 	"github.com/gokch/kioskgo/p2p"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-log"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +25,6 @@ var (
 		Peers:    []string{},
 	}
 
-	logger     = &zerolog.Logger{}
 	rootPath   string
 	timeout    int64
 	workerSize int64
@@ -90,7 +88,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 			logger.Warn(err, fmt.Sprint("cid :", cids[i], "invalid cid"))
 			return
 		}
-		err = client.ReqDownload(ctx, ci, path)
+		err = client.Download(ctx, ci, path)
 		if err != nil {
 			logger.Warn(err, fmt.Sprint("cid :", cids[i], "get cid is failed"))
 			return

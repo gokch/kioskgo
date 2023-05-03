@@ -115,7 +115,7 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) ReqDownload(ctx context.Context, cid cid.Cid, path string) error {
+func (c *Client) Download(ctx context.Context, cid cid.Cid, path string) error {
 	return c.mq.Submit(func() {
 		err := c.mount.Download(ctx, cid, path)
 		if err != nil {
@@ -126,7 +126,7 @@ func (c *Client) ReqDownload(ctx context.Context, cid cid.Cid, path string) erro
 	})
 }
 
-func (c *Client) ReqUpload(ctx context.Context, cid cid.Cid, path string) error {
+func (c *Client) Upload(ctx context.Context, cid cid.Cid, path string) error {
 	return c.mq.Submit(func() {
 		cid, err := c.mount.Upload(ctx, path)
 		if err != nil {
