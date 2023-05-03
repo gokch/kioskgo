@@ -84,6 +84,7 @@ func (m *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
 
 }
 
+// read 가 필요한가? path 에서 그냥 업로드 하는거 아니야?
 func (m *Dag) Upload(ctx context.Context, path string, read io.Reader) (cid.Cid, error) {
 	// Split the file up into fixed sized 256KiB chunks
 	ufsBuilder, err := m.Dag.New(chunk.NewSizeSplitter(read, chunk.DefaultBlockSize))

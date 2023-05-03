@@ -71,7 +71,7 @@ func TestClient(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ci, err := client.mount.Upload(ctx, "nilou.mp4")
+	ci, err := client.dag.Upload(ctx, "nilou.mp4", nil)
 	require.NoError(t, err)
 
 	fmt.Println("connect | address | cid :", client.Self(), ci.String())

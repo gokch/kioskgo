@@ -27,8 +27,8 @@ type ClientConfig struct {
 
 // waitlist 발신 ( 수신 / 송신 )
 type Client struct {
-	mount *mount.Mount
-	mq    *ants.Pool
+	dag *mount.Dag
+	mq  *ants.Pool
 
 	host  host.Host
 	bswap *bitswap.Bitswap
@@ -56,8 +56,8 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	bswap := bitswap.New(ctx, bsn, bs)
 	bsn.Start(bswap)
 
-	// init mount
-	mount, err := mount.NewMount(ctx, fs, bs, bswap)
+	// init dag
+	dag, err := mount.NewDag(ctx, mount.NewMount(fs, bs), bswap)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +68,8 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	}
 
 	c := &Client{
-		mount: mount,
-		mq:    mq,
+		dag: dag,
+		mq:  mq,
 
 		host:  host,
 		bswap: bswap,
@@ -117,7 +117,7 @@ func (c *Client) Close() error {
 
 func (c *Client) Download(ctx context.Context, cid cid.Cid, path string) error {
 	return c.mq.Submit(func() {
-		err := c.mount.Download(ctx, cid, path)
+		err := c.dag.Download(ctx, cid, path)
 		if err != nil {
 			fmt.Println("download not finished")
 		} else {
@@ -128,7 +128,7 @@ func (c *Client) Download(ctx context.Context, cid cid.Cid, path string) error {
 
 func (c *Client) Upload(ctx context.Context, cid cid.Cid, path string) error {
 	return c.mq.Submit(func() {
-		cid, err := c.mount.Upload(ctx, path)
+		cid, err := c.dag.Upload(ctx, path, nil)
 		if err != nil {
 			fmt.Println("upload not finished")
 		} else {

@@ -31,7 +31,7 @@ func TestInitDHT(t *testing.T) {
 	dag, err := NewDag(ctx, mnt, ex)
 	require.NoError(t, err)
 
-	ci, err := dag.Upload(ctx, "a/a.txt", bytes.NewReader([]byte("abcdfefedefede")))
+	ci, err := dag.Upload(ctx, "a/a.txt", bytes.NewReader(bytes.Repeat([]byte("abcdfaefedefede"), 100000)))
 	require.NoError(t, err)
 
 	fmt.Println(ci.String())
