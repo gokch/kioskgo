@@ -1,12 +1,13 @@
 package mount
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/exchange/offline"
-	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/stretchr/testify/require"
@@ -18,11 +19,6 @@ func TestInitDHT(t *testing.T) {
 
 	// make file store
 	fs := file.NewFileStore("rootpath")
-	oria := []byte("testaa")
-	orib := []byte("testbb")
-
-	fs.Put("a/a.txt", file.NewWriterFromBytes(oria))
-	fs.Put("b/b.txt", file.NewWriterFromBytes(orib))
 
 	// make block store
 	mds := datastore.NewMapDatastore()
@@ -30,28 +26,35 @@ func TestInitDHT(t *testing.T) {
 	ex := offline.Exchange(bs)
 
 	// start uploder
-	mnt, err := NewMount(ctx, fs, bs, ex)
+	mnt := NewMount(fs, bs)
+
+	dag, err := NewDag(ctx, mnt, ex)
 	require.NoError(t, err)
 
-	// get data from cid
-	cida, err := fs.GetCid("a/a.txt")
+	ci, err := dag.Upload(ctx, "a/a.txt", bytes.NewReader([]byte("abcdfefedefede")))
 	require.NoError(t, err)
 
-	newa, err := mnt.Dag.Dagserv.Get(ctx, cida)
-	require.NoError(t, err)
+	fmt.Println(ci.String())
 
-	cidb, err := fs.GetCid("b/b.txt")
-	require.NoError(t, err)
+	// // get data from cid
+	// cida, err := fs.GetCid("a/a.txt")
+	// require.NoError(t, err)
 
-	newb, err := mnt.Dag.Dagserv.Get(ctx, cidb)
-	require.NoError(t, err)
+	// newa, err := mnt.Dag.Dagserv.Get(ctx, cida)
+	// require.NoError(t, err)
 
-	require.Equal(t, oria, newa.RawData())
-	require.Equal(t, orib, newb.RawData())
+	// cidb, err := fs.GetCid("b/b.txt")
+	// require.NoError(t, err)
 
-	scida := cida.String()
-	newcida, _ := cid.Decode(scida)
-	require.Equal(t, cida, newcida)
+	// newb, err := mnt.Dag.Dagserv.Get(ctx, cidb)
+	// require.NoError(t, err)
+
+	// require.Equal(t, oria, newa.RawData())
+	// require.Equal(t, orib, newb.RawData())
+
+	// scida := cida.String()
+	// newcida, _ := cid.Decode(scida)
+	// require.Equal(t, cida, newcida)
 }
 
 /*

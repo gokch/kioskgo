@@ -5,14 +5,14 @@ import (
 	"io"
 
 	"github.com/gokch/kioskgo/file"
+	"github.com/ipfs/boxo/blockservice"
+	"github.com/ipfs/boxo/exchange"
+	"github.com/ipfs/boxo/ipld/merkledag"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
-	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
 	chunk "github.com/ipfs/go-ipfs-chunker"
-	exchange "github.com/ipfs/go-ipfs-exchange-interface"
-	"github.com/ipfs/go-merkledag"
 	"github.com/multiformats/go-multicodec"
 )
 
@@ -42,6 +42,7 @@ func NewDag(ctx context.Context, mount *Mount, rem exchange.Interface) (*Dag, er
 
 	Dag := &Dag{
 		Dag: builder,
+		Fs:  mount.fs,
 	}
 
 	// import blocks in Merkle-DAG from fileStore
@@ -60,6 +61,9 @@ func NewDag(ctx context.Context, mount *Mount, rem exchange.Interface) (*Dag, er
 }
 
 func (m *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
+	// put path
+	m.Fs.FM.Put(ci, path, 0)
+
 	node, err := m.Dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err
@@ -81,7 +85,6 @@ func (m *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
 }
 
 func (m *Dag) Upload(ctx context.Context, path string, read io.Reader) (cid.Cid, error) {
-
 	// Split the file up into fixed sized 256KiB chunks
 	ufsBuilder, err := m.Dag.New(chunk.NewSizeSplitter(read, chunk.DefaultBlockSize))
 	if err != nil {
@@ -92,5 +95,7 @@ func (m *Dag) Upload(ctx context.Context, path string, read io.Reader) (cid.Cid,
 		return cid.Cid{}, err
 	}
 
+	// put path
+	m.Fs.FM.Put(nd.Cid(), path, 0)
 	return nd.Cid(), nil
 }

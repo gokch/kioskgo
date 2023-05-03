@@ -17,7 +17,7 @@ import (
 var logger = logging.Logger("mount")
 
 type Mount struct {
-	fm  *file.FileStore
+	fs  *file.FileStore
 	bs  blockstore.Blockstore
 	dag ipld.DAGService // use MapDataStore
 }
@@ -26,7 +26,7 @@ var _ blockstore.Blockstore = (*Mount)(nil)
 
 func NewMount(fs *file.FileStore, bs blockstore.Blockstore) *Mount {
 	return &Mount{
-		fm: fs,
+		fs: fs,
 		bs: bs,
 	}
 }
@@ -68,7 +68,7 @@ func (f *Mount) AllKeysChan(ctx context.Context) (<-chan cid.Cid, error) {
 		// Can't do these at the same time because the abstractions around
 		// leveldb make us query leveldb for both operations. We apparently
 		// cant query leveldb concurrently
-		b, err := f.fm.AllKeysChan(ctx)
+		b, err := f.fs.AllKeysChan(ctx)
 		if err != nil {
 			logger.Error("error querying filestore: ", err)
 			return
@@ -101,7 +101,7 @@ func (f *Mount) DeleteBlock(ctx context.Context, c cid.Cid) error {
 		return err1
 	}
 
-	err2 := f.fm.DeleteBlock(ctx, c)
+	err2 := f.fs.DeleteBlock(ctx, c)
 
 	// if we successfully removed something from the blockstore, but the
 	// filestore didnt have it, return success
@@ -119,7 +119,7 @@ func (f *Mount) DeleteBlock(ctx context.Context, c cid.Cid) error {
 func (f *Mount) Get(ctx context.Context, c cid.Cid) (blocks.Block, error) {
 	blk, err := f.bs.Get(ctx, c)
 	if ipld.IsNotFound(err) {
-		return f.fm.Get(ctx, c)
+		return f.fs.Get(ctx, c)
 	}
 	return blk, err
 }
@@ -128,7 +128,7 @@ func (f *Mount) GetSize(ctx context.Context, c cid.Cid) (int, error) {
 	size, err := f.bs.GetSize(ctx, c)
 	if err != nil {
 		if ipld.IsNotFound(err) {
-			return f.fm.GetSize(ctx, c)
+			return f.fs.GetSize(ctx, c)
 		}
 		return -1, err
 	}
@@ -145,7 +145,7 @@ func (f *Mount) Has(ctx context.Context, c cid.Cid) (bool, error) {
 		return true, nil
 	}
 
-	return f.fm.Has(ctx, c)
+	return f.fs.Has(ctx, c)
 }
 
 func (f *Mount) Put(ctx context.Context, b blocks.Block) error {
@@ -157,13 +157,15 @@ func (f *Mount) Put(ctx context.Context, b blocks.Block) error {
 	if has {
 		return nil
 	}
+
+	// TODO : 몬가 안됨..
 	switch b := b.(type) {
 	case *posinfo.FilestoreNode:
 		unixfsNode, err := unixfile.NewUnixfsFile(ctx, f.dag, b)
 		if err != nil {
 			return err
 		}
-		return f.fm.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
+		return f.fs.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
 	default:
 		return f.bs.Put(ctx, b)
 	}
@@ -191,7 +193,7 @@ func (f *Mount) PutMany(ctx context.Context, bs []blocks.Block) error {
 			if err != nil {
 				return err
 			}
-			err = f.fm.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
+			err = f.fs.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
 			if err != nil {
 				return err
 			}
