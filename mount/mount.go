@@ -4,107 +4,223 @@ import (
 	"context"
 
 	"github.com/gokch/kioskgo/file"
-
-	"github.com/ipfs/boxo/exchange"
-	"github.com/ipfs/go-cid"
-	"github.com/multiformats/go-multicodec"
-
-	"github.com/ipfs/boxo/blockservice"
-	"github.com/ipfs/boxo/blockstore"
-	chunker "github.com/ipfs/boxo/chunker"
-	"github.com/ipfs/boxo/ipld/merkledag"
+	blockstore "github.com/ipfs/boxo/blockstore"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
-	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
-	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
+	blocks "github.com/ipfs/go-block-format"
+	"github.com/ipfs/go-cid"
+	dsq "github.com/ipfs/go-datastore/query"
+	posinfo "github.com/ipfs/go-ipfs-posinfo"
+	ipld "github.com/ipfs/go-ipld-format"
+	logging "github.com/ipfs/go-log"
 )
 
-// Mount dag to fileStore
-// TODO : fs 의 cid 와 dag 의 cid 가 다를 경우 동기화 처리 필요
-// dag 의 block 은 어느 기준으로 Garbage collect?? 블록 전체를 캐싱하고 있으면 안되는데...
-// filemanager 도 여기에 넣는게 맞나?
+var logger = logging.Logger("mount")
+
 type Mount struct {
-	Dag *uih.DagBuilderParams // use MapDataStore
-	Fs  *file.FileStore       // FileStore
+	fm  *file.FileStore
+	bs  blockstore.Blockstore
+	dag ipld.DAGService // use MapDataStore
 }
 
-func NewMount(ctx context.Context, fs *file.FileStore, bs blockstore.Blockstore, rem exchange.Interface) (*Mount, error) {
-	// make dag service, save dht blocks
-	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
-	builder := &uih.DagBuilderParams{
-		Maxlinks:  uih.DefaultLinksPerBlock, // Default max of 174 links per block
-		RawLeaves: true,                     // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
-		CidBuilder: cid.V1Builder{ // Use CIDv1 for all links
-			Codec:    uint64(multicodec.DagPb),
-			MhType:   uint64(multicodec.Sha3_256), // Use SHA3-256 as the hash function
-			MhLength: -1,                          // Use the default hash length for the given hash function (in this case 256 bits)
-		},
-		Dagserv: merkledag.NewDAGService(blockservice.New(bs, rem)),
-		NoCopy:  false,
-	}
+var _ blockstore.Blockstore = (*Mount)(nil)
 
-	mount := &Mount{
-		Dag: builder,
-		Fs:  fs,
+func NewMount(fs *file.FileStore, bs blockstore.Blockstore) *Mount {
+	return &Mount{
+		fm: fs,
+		bs: bs,
 	}
+}
 
-	// import blocks in Merkle-DAG from fileStore
-	err := fs.Iterate("", func(path string, reader *file.Reader) error {
-		_, err := mount.Upload(ctx, path)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+// AllKeysChan returns a channel from which to read the keys stored in
+// the blockstore. If the given context is cancelled the channel will be closed.
+func (f *Mount) AllKeysChan(ctx context.Context) (<-chan cid.Cid, error) {
+	ctx, cancel := context.WithCancel(ctx)
+
+	a, err := f.bs.AllKeysChan(ctx)
 	if err != nil {
+		cancel()
 		return nil, err
 	}
 
-	return mount, nil
+	out := make(chan cid.Cid, dsq.KeysOnlyBufSize)
+	go func() {
+		defer cancel()
+		defer close(out)
+
+		var done bool
+		for !done {
+			select {
+			case c, ok := <-a:
+				if !ok {
+					done = true
+					continue
+				}
+				select {
+				case out <- c:
+				case <-ctx.Done():
+					return
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+
+		// Can't do these at the same time because the abstractions around
+		// leveldb make us query leveldb for both operations. We apparently
+		// cant query leveldb concurrently
+		b, err := f.fm.AllKeysChan(ctx)
+		if err != nil {
+			logger.Error("error querying filestore: ", err)
+			return
+		}
+
+		done = false
+		for !done {
+			select {
+			case c, ok := <-b:
+				if !ok {
+					done = true
+					continue
+				}
+				select {
+				case out <- c:
+				case <-ctx.Done():
+					return
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+	return out, nil
 }
 
-func (m *Mount) Download(ctx context.Context, ci cid.Cid, path string) error {
-	node, err := m.Dag.Dagserv.Get(ctx, ci)
-	if err != nil {
-		return err
+func (f *Mount) DeleteBlock(ctx context.Context, c cid.Cid) error {
+	err1 := f.bs.DeleteBlock(ctx, c)
+	if err1 != nil && !ipld.IsNotFound(err1) {
+		return err1
 	}
 
-	unixFSNode, err := unixfile.NewUnixfsFile(ctx, m.Dag.Dagserv, node)
-	if err != nil {
-		return err
-	}
-	defer unixFSNode.Close()
+	err2 := f.fm.DeleteBlock(ctx, c)
 
-	err = m.Fs.Overwrite(path, file.NewWriter(unixFSNode))
-	if err != nil {
-		return err
+	// if we successfully removed something from the blockstore, but the
+	// filestore didnt have it, return success
+	if !ipld.IsNotFound(err2) {
+		return err2
 	}
 
-	// put cid
-	return m.Fs.PutCid(path, ci)
+	if ipld.IsNotFound(err1) {
+		return err1
+	}
+
+	return nil
 }
 
-func (m *Mount) Upload(ctx context.Context, path string) (cid.Cid, error) {
-	data, err := m.Fs.Get(path)
-	if err != nil {
-		return cid.Cid{}, err
+func (f *Mount) Get(ctx context.Context, c cid.Cid) (blocks.Block, error) {
+	blk, err := f.bs.Get(ctx, c)
+	if ipld.IsNotFound(err) {
+		return f.fm.Get(ctx, c)
 	}
-	defer data.Close()
+	return blk, err
+}
 
-	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := m.Dag.New(chunker.NewSizeSplitter(data.ReaderFile, chunker.DefaultBlockSize))
+func (f *Mount) GetSize(ctx context.Context, c cid.Cid) (int, error) {
+	size, err := f.bs.GetSize(ctx, c)
 	if err != nil {
-		return cid.Cid{}, err
+		if ipld.IsNotFound(err) {
+			return f.fm.GetSize(ctx, c)
+		}
+		return -1, err
 	}
-	nd, err := balanced.Layout(ufsBuilder) // Arrange the graph with a balanced layout
+	return size, nil
+}
+
+func (f *Mount) Has(ctx context.Context, c cid.Cid) (bool, error) {
+	has, err := f.bs.Has(ctx, c)
 	if err != nil {
-		return cid.Cid{}, err
+		return false, err
 	}
 
-	// put cid
-	ci := nd.Cid()
-	err = m.Fs.PutCid(path, ci)
-	if err != nil {
-		return ci, err
+	if has {
+		return true, nil
 	}
-	return ci, nil
+
+	return f.fm.Has(ctx, c)
+}
+
+func (f *Mount) Put(ctx context.Context, b blocks.Block) error {
+	has, err := f.Has(ctx, b.Cid())
+	if err != nil {
+		return err
+	}
+
+	if has {
+		return nil
+	}
+	switch b := b.(type) {
+	case *posinfo.FilestoreNode:
+		unixfsNode, err := unixfile.NewUnixfsFile(ctx, f.dag, b)
+		if err != nil {
+			return err
+		}
+		return f.fm.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
+	default:
+		return f.bs.Put(ctx, b)
+	}
+}
+
+// PutMany is like Put(), but takes a slice of blocks, allowing
+// the underlying blockstore to perform batch transactions.
+func (f *Mount) PutMany(ctx context.Context, bs []blocks.Block) error {
+	var normals []blocks.Block
+	// var fstores []*posinfo.FilestoreNode
+
+	for _, b := range bs {
+		has, err := f.Has(ctx, b.Cid())
+		if err != nil {
+			return err
+		}
+
+		if has {
+			continue
+		}
+
+		switch b := b.(type) {
+		case *posinfo.FilestoreNode:
+			unixfsNode, err := unixfile.NewUnixfsFile(ctx, f.dag, b)
+			if err != nil {
+				return err
+			}
+			err = f.fm.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
+			if err != nil {
+				return err
+			}
+		default:
+			normals = append(normals, b)
+		}
+	}
+
+	if len(normals) > 0 {
+		err := f.bs.PutMany(ctx, normals)
+		if err != nil {
+			return err
+		}
+	}
+	/*
+		if len(fstores) > 0 {
+			for _, fstore := range fstores {
+				unixfsNode, err := unixfile.NewUnixfsFile(ctx, f.dag, fstore)
+				if err != nil {
+					return err
+				}
+
+			}
+		}
+	*/
+	return nil
+}
+
+// HashOnRead calls blockstore.HashOnRead.
+func (f *Mount) HashOnRead(enabled bool) {
+	f.bs.HashOnRead(enabled)
 }

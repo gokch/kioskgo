@@ -11,10 +11,9 @@ import (
 	"github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 	"github.com/libp2p/go-nat"
 	"github.com/stretchr/testify/require"
-
-	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 )
 
 func TestHostDht(t *testing.T) {

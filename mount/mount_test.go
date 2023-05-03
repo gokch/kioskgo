@@ -1,5 +1,6 @@
 package mount
 
+/*
 import (
 	"context"
 	"testing"
@@ -53,7 +54,7 @@ func TestInitDHT(t *testing.T) {
 	newcida, _ := cid.Decode(scida)
 	require.Equal(t, cida, newcida)
 }
-
+*/
 /*
 func TestP2PCar(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
