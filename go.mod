@@ -9,14 +9,18 @@ require (
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/libp2p/go-libp2p v0.26.4
 	github.com/multiformats/go-multiaddr v0.8.0
-	github.com/multiformats/go-multicodec v0.8.1 // indirect
+	github.com/multiformats/go-multicodec v0.8.1
 	github.com/stretchr/testify v1.8.2
 	google.golang.org/protobuf v1.30.0
 )
 
 require (
+	github.com/ipfs/go-blockservice v0.2.1
 	github.com/ipfs/go-ipfs-blockstore v1.3.0
+	github.com/ipfs/go-ipfs-exchange-interface v0.1.0
 	github.com/ipfs/go-ipfs-posinfo v0.0.1
+	github.com/ipfs/go-merkledag v0.5.1
+	github.com/ipfs/go-unixfs v0.4.5
 	github.com/libp2p/go-libp2p-kad-dht v0.21.1
 	github.com/libp2p/go-nat v0.1.0
 	github.com/panjf2000/ants v1.3.0
@@ -26,13 +30,17 @@ require (
 require (
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect
 	github.com/ipfs/go-bitfield v1.1.0 // indirect
+	github.com/ipfs/go-ipfs-chunker v0.0.5 // indirect
 	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
+	github.com/ipfs/go-ipfs-files v0.2.0 // indirect
 	github.com/ipfs/go-ipfs-pq v0.0.3 // indirect
 	github.com/ipfs/go-ipld-cbor v0.0.6 // indirect
 	github.com/ipfs/go-ipld-legacy v0.1.1 // indirect
 	github.com/ipfs/go-peertaskqueue v0.8.1 // indirect
+	github.com/ipfs/go-verifcid v0.0.1 // indirect
 	github.com/ipld/go-codec-dagpb v1.6.0 // indirect
 	github.com/whyrusleeping/cbor-gen v0.0.0-20230126041949-52956bd4c9aa // indirect
+	github.com/whyrusleeping/chunker v0.0.0-20181014151217-fe64bd25879f // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 )
 

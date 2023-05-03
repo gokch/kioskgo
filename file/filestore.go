@@ -16,12 +16,12 @@ type FileStore struct {
 	FM       *FileManager
 }
 
-func NewFileStore(rootPath string, blockSize uint64) *FileStore {
+func NewFileStore(rootPath string) *FileStore {
 	os.MkdirAll(rootPath, 0755)
 
 	return &FileStore{
 		rootPath: rootPath,
-		FM:       NewFileManager(blockSize),
+		FM:       NewFileManager(1024 * 256), // 256 kib
 	}
 }
 
