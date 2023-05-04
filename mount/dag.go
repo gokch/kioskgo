@@ -61,9 +61,6 @@ func NewDag(ctx context.Context, mount *Mount, rem exchange.Interface) (*Dag, er
 }
 
 func (m *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
-	// put path
-	m.Fs.FM.Put(ci, path, 0)
-
 	node, err := m.Dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err
@@ -75,9 +72,9 @@ func (m *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
 	}
 	defer unixFSNode.Close()
 
-	// err = m.Fs.Overwrite(path, file.NewWriter(unixFSNode))
+	// err = m.Fs.Put(path, ci, file.NewWriter(unixFSNode))
 	// if err != nil {
-	// 	return err
+	// return err
 	// }
 
 	return nil

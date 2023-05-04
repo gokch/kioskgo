@@ -119,7 +119,16 @@ func (f *Mount) DeleteBlock(ctx context.Context, c cid.Cid) error {
 func (f *Mount) Get(ctx context.Context, c cid.Cid) (blocks.Block, error) {
 	blk, err := f.bs.Get(ctx, c)
 	if ipld.IsNotFound(err) {
-		return f.fs.Get(ctx, c)
+		blk, err = f.fs.Get(ctx, c)
+		if ipld.IsNotFound(err) {
+			return nil, err
+		}
+		// set
+		err = f.bs.Put(ctx, blk)
+		if err != nil {
+			return nil, err
+		}
+		return blk, nil
 	}
 	return blk, err
 }
@@ -152,9 +161,7 @@ func (f *Mount) Put(ctx context.Context, b blocks.Block) error {
 	has, err := f.Has(ctx, b.Cid())
 	if err != nil {
 		return err
-	}
-
-	if has {
+	} else if has {
 		return nil
 	}
 
@@ -181,9 +188,7 @@ func (f *Mount) PutMany(ctx context.Context, bs []blocks.Block) error {
 		has, err := f.Has(ctx, b.Cid())
 		if err != nil {
 			return err
-		}
-
-		if has {
+		} else if has {
 			continue
 		}
 

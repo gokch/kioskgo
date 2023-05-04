@@ -9,6 +9,7 @@ import (
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
 	posinfo "github.com/ipfs/go-ipfs-posinfo"
+	format "github.com/ipfs/go-ipld-format"
 )
 
 type FileStore struct {
@@ -68,22 +69,22 @@ func (f *FileStore) Put(ctx context.Context, ci cid.Cid, posInfo posinfo.PosInfo
 func (f *FileStore) Get(ctx context.Context, ci cid.Cid) (blocks.Block, error) {
 	info := f.FM.Get(ci)
 	if info == nil {
-		return nil, os.ErrNotExist
+		return nil, format.ErrNotFound{Cid: ci}
 	}
 
 	fullPath := filepath.Join(f.rootPath, info.path)
 	reader := NewReaderFromPath(fullPath)
 	if reader == nil {
-		return nil, os.ErrNotExist
+		return nil, format.ErrNotFound{Cid: ci}
 	}
 
 	return reader.GetBlock(int64(info.offset), int64(info.size), ci)
 }
 
-func (f *FileStore) GetSize(ctx context.Context, c cid.Cid) (int, error) {
-	info := f.FM.Get(c)
+func (f *FileStore) GetSize(ctx context.Context, ci cid.Cid) (int, error) {
+	info := f.FM.Get(ci)
 	if info == nil {
-		return -1, os.ErrNotExist
+		return -1, format.ErrNotFound{Cid: ci}
 	}
 	return int(info.size), nil
 }
@@ -120,7 +121,7 @@ func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader) e
 func (f *FileStore) DeleteBlock(ctx context.Context, ci cid.Cid) error {
 	info := f.FM.Get(ci)
 	if info == nil {
-		return os.ErrNotExist
+		return format.ErrNotFound{Cid: ci}
 	}
 
 	fullPath := filepath.Join(f.rootPath, info.path)
