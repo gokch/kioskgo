@@ -37,6 +37,7 @@ type Client struct {
 func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	// init fs
 	fs := file.NewFileStore(cfg.RootPath)
+	fm := file.NewFileManager()
 
 	// init memory bs for dht
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
@@ -57,7 +58,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	bsn.Start(bswap)
 
 	// init dag
-	dag, err := mount.NewDag(ctx, mount.NewMount(fs, bs), bswap)
+	dag, err := mount.NewDag(ctx, -1, mount.NewMount(fs, fm, bs), bswap)
 	if err != nil {
 		return nil, err
 	}

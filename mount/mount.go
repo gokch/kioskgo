@@ -124,6 +124,9 @@ func (f *Mount) Get(ctx context.Context, c cid.Cid) (blocks.Block, error) {
 	blk, err := f.bs.Get(ctx, c)
 	if ipld.IsNotFound(err) {
 		info := f.fm.Get(c)
+		if info == nil {
+			return nil, ipld.ErrNotFound{}
+		}
 
 		reader, err := f.fs.Get(ctx, info.Path)
 		if err != nil {

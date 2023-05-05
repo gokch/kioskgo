@@ -93,7 +93,7 @@ func (d *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
 func (d *Dag) Upload(ctx context.Context, path string, reader io.Reader) (cid.Cid, error) {
 	var err error
 
-	// if read == nil, put reader in fileStore
+	// if reader != nil, put reader in fileStore
 	// if already exist in filepath, return err
 	if reader != nil {
 		err = d.mount.fs.Put(ctx, path, file.NewWriter(files.NewReaderFile(reader)))

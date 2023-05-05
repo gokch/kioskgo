@@ -77,17 +77,17 @@ func TestClient(t *testing.T) {
 	fmt.Println("connect | address | cid :", client.Self(), ci.String())
 
 	// download
-	// client2, err := NewClient(ctx, &ClientConfig{
-	// 	RootPath:   "./cpypath",
-	// 	Peers:      []string{client.Self()},
-	// 	SizeWorker: 1,
-	// 	ExpireSec:  600,
-	// })
-	// require.NoError(t, err)
+	client2, err := NewClient(ctx, &ClientConfig{
+		RootPath:   "./cpypath",
+		Peers:      []string{client.Self()},
+		SizeWorker: 1,
+		ExpireSec:  600,
+	})
+	require.NoError(t, err)
 
-	// // ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
-	// err = client2.mount.Download(ctx, ci, "nilou.mp4")
-	// require.NoError(t, err)
+	// ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
+	err = client2.dag.Download(ctx, ci, "nilou.mp4")
+	require.NoError(t, err)
 
 	time.Sleep(time.Second * 1200)
 
