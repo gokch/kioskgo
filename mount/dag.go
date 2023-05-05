@@ -24,7 +24,7 @@ type Dag struct {
 	blockSize int
 
 	Dag   *uih.DagBuilderParams // use MapDataStore
-	mount *Mount                // FileStore
+	mount *Mount                // mount
 }
 
 func NewDag(ctx context.Context, blockSize int, mount *Mount, rem exchange.Interface) (*Dag, error) {
