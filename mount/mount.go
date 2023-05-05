@@ -5,7 +5,6 @@ import (
 
 	"github.com/gokch/kioskgo/file"
 	blockstore "github.com/ipfs/boxo/blockstore"
-	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
 	dsq "github.com/ipfs/go-datastore/query"
@@ -17,16 +16,17 @@ import (
 var logger = logging.Logger("mount")
 
 type Mount struct {
-	fs  *file.FileStore
-	bs  blockstore.Blockstore
-	dag ipld.DAGService // use MapDataStore
+	fs *file.FileStore
+	fm *file.FileManager
+	bs blockstore.Blockstore
 }
 
 var _ blockstore.Blockstore = (*Mount)(nil)
 
-func NewMount(fs *file.FileStore, bs blockstore.Blockstore) *Mount {
+func NewMount(fs *file.FileStore, fm *file.FileManager, bs blockstore.Blockstore) *Mount {
 	return &Mount{
 		fs: fs,
+		fm: fm,
 		bs: bs,
 	}
 }
@@ -68,7 +68,7 @@ func (f *Mount) AllKeysChan(ctx context.Context) (<-chan cid.Cid, error) {
 		// Can't do these at the same time because the abstractions around
 		// leveldb make us query leveldb for both operations. We apparently
 		// cant query leveldb concurrently
-		b, err := f.fs.AllKeysChan(ctx)
+		b, err := f.fm.AllKeysChan(ctx)
 		if err != nil {
 			logger.Error("error querying filestore: ", err)
 			return
@@ -101,11 +101,15 @@ func (f *Mount) DeleteBlock(ctx context.Context, c cid.Cid) error {
 		return err1
 	}
 
-	err2 := f.fs.DeleteBlock(ctx, c)
+	info := f.fm.Get(c)
+	if info == nil {
+		return nil
+	}
+	err2 := f.fs.DeleteBlock(ctx, info.Path)
 
 	// if we successfully removed something from the blockstore, but the
 	// filestore didnt have it, return success
-	if !ipld.IsNotFound(err2) {
+	if err2 != nil {
 		return err2
 	}
 
@@ -119,11 +123,23 @@ func (f *Mount) DeleteBlock(ctx context.Context, c cid.Cid) error {
 func (f *Mount) Get(ctx context.Context, c cid.Cid) (blocks.Block, error) {
 	blk, err := f.bs.Get(ctx, c)
 	if ipld.IsNotFound(err) {
-		blk, err = f.fs.Get(ctx, c)
-		if ipld.IsNotFound(err) {
+		info := f.fm.Get(c)
+
+		reader, err := f.fs.Get(ctx, info.Path)
+		if err != nil {
 			return nil, err
 		}
-		// set
+		rawblk, err := reader.GetBlock(info.Offset, info.Size)
+		if err != nil {
+			return nil, err
+		}
+		reader.Close()
+
+		blk, err = blocks.NewBlockWithCid(rawblk, c)
+		if err != nil {
+			return nil, err
+		}
+		// set block from fs
 		err = f.bs.Put(ctx, blk)
 		if err != nil {
 			return nil, err
@@ -137,7 +153,8 @@ func (f *Mount) GetSize(ctx context.Context, c cid.Cid) (int, error) {
 	size, err := f.bs.GetSize(ctx, c)
 	if err != nil {
 		if ipld.IsNotFound(err) {
-			return f.fs.GetSize(ctx, c)
+			fi := f.fm.Get(c)
+			return fi.Size, nil
 		}
 		return -1, err
 	}
@@ -154,7 +171,7 @@ func (f *Mount) Has(ctx context.Context, c cid.Cid) (bool, error) {
 		return true, nil
 	}
 
-	return f.fs.Has(ctx, c)
+	return f.fm.Has(ctx, c), nil
 }
 
 func (f *Mount) Put(ctx context.Context, b blocks.Block) error {
@@ -165,25 +182,19 @@ func (f *Mount) Put(ctx context.Context, b blocks.Block) error {
 		return nil
 	}
 
-	// TODO : 몬가 안됨..
 	switch b := b.(type) {
 	case *posinfo.FilestoreNode:
-		unixfsNode, err := unixfile.NewUnixfsFile(ctx, f.dag, b)
-		if err != nil {
-			return err
-		}
-		return f.fs.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
+		// do nothing. fs will be updated in dag after all block put
 	default:
 		return f.bs.Put(ctx, b)
 	}
+	return nil
 }
 
 // PutMany is like Put(), but takes a slice of blocks, allowing
 // the underlying blockstore to perform batch transactions.
 func (f *Mount) PutMany(ctx context.Context, bs []blocks.Block) error {
 	var normals []blocks.Block
-	// var fstores []*posinfo.FilestoreNode
-
 	for _, b := range bs {
 		has, err := f.Has(ctx, b.Cid())
 		if err != nil {
@@ -194,14 +205,7 @@ func (f *Mount) PutMany(ctx context.Context, bs []blocks.Block) error {
 
 		switch b := b.(type) {
 		case *posinfo.FilestoreNode:
-			unixfsNode, err := unixfile.NewUnixfsFile(ctx, f.dag, b)
-			if err != nil {
-				return err
-			}
-			err = f.fs.Put(ctx, b.Cid(), *b.PosInfo, file.NewWriter(unixfsNode))
-			if err != nil {
-				return err
-			}
+			// do nothing. fs will be updated in dag after all block put
 		default:
 			normals = append(normals, b)
 		}
@@ -213,17 +217,6 @@ func (f *Mount) PutMany(ctx context.Context, bs []blocks.Block) error {
 			return err
 		}
 	}
-	/*
-		if len(fstores) > 0 {
-			for _, fstore := range fstores {
-				unixfsNode, err := unixfile.NewUnixfsFile(ctx, f.dag, fstore)
-				if err != nil {
-					return err
-				}
-
-			}
-		}
-	*/
 	return nil
 }
 

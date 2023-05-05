@@ -7,6 +7,7 @@ import (
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/blockservice"
 	"github.com/ipfs/boxo/exchange"
+	"github.com/ipfs/boxo/files"
 	"github.com/ipfs/boxo/ipld/merkledag"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
 	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
@@ -19,13 +20,18 @@ import (
 // Dag dag to fileStore
 // TODO : fs 의 cid 와 dag 의 cid 가 다를 경우 동기화 처리 필요
 // dag 의 block 은 어느 기준으로 Garbage collect?? 블록 전체를 캐싱하고 있으면 안되는데...
-// filemanager 도 여기에 넣는게 맞나?
 type Dag struct {
-	Dag *uih.DagBuilderParams // use MapDataStore
-	Fs  *file.FileStore       // FileStore
+	blockSize int
+
+	Dag   *uih.DagBuilderParams // use MapDataStore
+	mount *Mount                // FileStore
 }
 
-func NewDag(ctx context.Context, mount *Mount, rem exchange.Interface) (*Dag, error) {
+func NewDag(ctx context.Context, blockSize int, mount *Mount, rem exchange.Interface) (*Dag, error) {
+	// set default block size
+	if blockSize <= 0 {
+		blockSize = int(chunk.DefaultBlockSize)
+	}
 	// make dag service, save dht blocks
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
@@ -41,50 +47,69 @@ func NewDag(ctx context.Context, mount *Mount, rem exchange.Interface) (*Dag, er
 	}
 
 	Dag := &Dag{
-		Dag: builder,
-		Fs:  mount.fs,
+		blockSize: blockSize,
+		Dag:       builder,
+		mount:     mount,
 	}
 
 	// import blocks in Merkle-DAG from fileStore
-	// err := fs.Iterate("", func(path string, reader *file.Reader) error {
-	// 	_, err := Dag.Upload(ctx, path)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	return nil
-	// })
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err := Dag.mount.fs.Iterate("", func(path string, reader *file.Reader) error {
+		_, err := Dag.Upload(ctx, path, nil)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return Dag, nil
 }
 
-func (m *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
-	node, err := m.Dag.Dagserv.Get(ctx, ci)
+func (d *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
+	nd, err := d.Dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err
 	}
 
-	unixFSNode, err := unixfile.NewUnixfsFile(ctx, m.Dag.Dagserv, node)
+	// put cids in fm
+	d.mount.fm.PutNode(nd, path, d.blockSize)
+
+	unixFSNode, err := unixfile.NewUnixfsFile(ctx, d.Dag.Dagserv, nd)
 	if err != nil {
 		return err
 	}
-	defer unixFSNode.Close()
-
-	// err = m.Fs.Put(path, ci, file.NewWriter(unixFSNode))
-	// if err != nil {
-	// return err
-	// }
+	// put data in fs
+	err = d.mount.fs.Put(ctx, path, file.NewWriter(unixFSNode))
+	if err != nil {
+		return err
+	}
+	unixFSNode.Close()
 
 	return nil
-
 }
 
-// read 가 필요한가? path 에서 그냥 업로드 하는거 아니야?
-func (m *Dag) Upload(ctx context.Context, path string, read io.Reader) (cid.Cid, error) {
-	// Split the file up into fixed sized 256KiB chunks
-	ufsBuilder, err := m.Dag.New(chunk.NewSizeSplitter(read, chunk.DefaultBlockSize))
+func (d *Dag) Upload(ctx context.Context, path string, reader io.Reader) (cid.Cid, error) {
+	var err error
+
+	// if read == nil, put reader in fileStore
+	// if already exist in filepath, return err
+	if reader != nil {
+		err = d.mount.fs.Put(ctx, path, file.NewWriter(files.NewReaderFile(reader)))
+		if err != nil {
+			return cid.Cid{}, err
+		}
+	}
+
+	// get reader from filestore
+	reader, err = d.mount.fs.Get(ctx, path)
+	if err != nil {
+		return cid.Cid{}, err
+	}
+
+	// put reader in dag
+	ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(reader, 1000))
 	if err != nil {
 		return cid.Cid{}, err
 	}
@@ -93,7 +118,8 @@ func (m *Dag) Upload(ctx context.Context, path string, read io.Reader) (cid.Cid,
 		return cid.Cid{}, err
 	}
 
-	// put path
-	m.Fs.FM.Put(nd.Cid(), path, 0)
+	// put cids in fm
+	d.mount.fm.PutNode(nd, path, d.blockSize)
+
 	return nd.Cid(), nil
 }

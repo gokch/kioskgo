@@ -6,15 +6,10 @@ import (
 	"path/filepath"
 
 	"github.com/ipfs/boxo/files"
-	blocks "github.com/ipfs/go-block-format"
-	"github.com/ipfs/go-cid"
-	posinfo "github.com/ipfs/go-ipfs-posinfo"
-	format "github.com/ipfs/go-ipld-format"
 )
 
 type FileStore struct {
 	rootPath string
-	FM       *FileManager
 }
 
 func NewFileStore(rootPath string) *FileStore {
@@ -22,7 +17,6 @@ func NewFileStore(rootPath string) *FileStore {
 
 	return &FileStore{
 		rootPath: rootPath,
-		FM:       NewFileManager(1024 * 256), // 256 kib
 	}
 }
 
@@ -39,11 +33,8 @@ func NewFileStore(rootPath string) *FileStore {
 	}
 */
 
-func (f *FileStore) Put(ctx context.Context, ci cid.Cid, posInfo posinfo.PosInfo, writer *Writer) error {
-	fileInfo := f.FM.Get(ci)
-	f.FM.Put(fileInfo.ci, fileInfo.path, fileInfo.offset) // put offset
-
-	fileName := filepath.Join(f.rootPath, fileInfo.path)
+func (f *FileStore) Put(ctx context.Context, path string, writer *Writer) error {
+	fileName := filepath.Join(f.rootPath, path)
 	filePath := filepath.Dir(fileName)
 	err := os.MkdirAll(filePath, 0755)
 	if err != nil {
@@ -57,44 +48,12 @@ func (f *FileStore) Put(ctx context.Context, ci cid.Cid, posInfo posinfo.PosInfo
 		}
 	}
 
-	// write cids
-	err = os.WriteFile(filepath.Join(filePath, DEF_PATH_CID_INFO), ci.Bytes(), 0755)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (f *FileStore) Get(ctx context.Context, ci cid.Cid) (blocks.Block, error) {
-	info := f.FM.Get(ci)
-	if info == nil {
-		return nil, format.ErrNotFound{Cid: ci}
-	}
-
-	fullPath := filepath.Join(f.rootPath, info.path)
-	reader := NewReaderFromPath(fullPath)
-	if reader == nil {
-		return nil, format.ErrNotFound{Cid: ci}
-	}
-
-	return reader.GetBlock(int64(info.offset), int64(info.size), ci)
-}
-
-func (f *FileStore) GetSize(ctx context.Context, ci cid.Cid) (int, error) {
-	info := f.FM.Get(ci)
-	if info == nil {
-		return -1, format.ErrNotFound{Cid: ci}
-	}
-	return int(info.size), nil
-}
-
-func (f *FileStore) Has(ctx context.Context, ci cid.Cid) (bool, error) {
-	info := f.FM.Get(ci)
-	if info != nil {
-		return true, nil
-	}
-	return false, nil
+func (f *FileStore) Get(ctx context.Context, path string) (*Reader, error) {
+	fullPath := filepath.Join(f.rootPath, path)
+	return NewReaderFromPath(fullPath), nil
 }
 
 func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader) error) error {
@@ -118,22 +77,9 @@ func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader) e
 	})
 }
 
-func (f *FileStore) DeleteBlock(ctx context.Context, ci cid.Cid) error {
-	info := f.FM.Get(ci)
-	if info == nil {
-		return format.ErrNotFound{Cid: ci}
-	}
-
-	fullPath := filepath.Join(f.rootPath, info.path)
+func (f *FileStore) DeleteBlock(ctx context.Context, path string) error {
+	fullPath := filepath.Join(f.rootPath, path)
 	return os.Remove(fullPath)
-}
-
-func (f *FileStore) AllKeysChan(ctx context.Context) (<-chan cid.Cid, error) {
-	out := make(chan cid.Cid)
-	for ci := range f.FM.cids {
-		out <- ci
-	}
-	return out, nil
 }
 
 // cids

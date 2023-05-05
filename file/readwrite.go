@@ -6,30 +6,22 @@ import (
 	"os"
 
 	"github.com/ipfs/boxo/files"
-	blocks "github.com/ipfs/go-block-format"
-	"github.com/ipfs/go-cid"
 )
 
 type Reader struct {
 	*files.ReaderFile
 }
 
-func (r *Reader) GetBlock(offset, size int64, ci cid.Cid) (blocks.Block, error) {
+func (r *Reader) GetBlock(offset, size int) ([]byte, error) {
+	if _, err := r.Seek(int64(offset), io.SeekStart); err != nil {
+		return nil, err
+	}
 	rawBlock := make([]byte, size)
-
-	if _, err := r.Seek(offset, io.SeekStart); err != nil {
-		return nil, err
-	}
-	data := make([]byte, 50)
-	if _, err := r.Read(data); err != nil {
+	if _, err := r.Read(rawBlock); err != nil {
 		return nil, err
 	}
 
-	block, err := blocks.NewBlockWithCid(rawBlock, ci)
-	if err != nil {
-		return nil, err
-	}
-	return block, nil
+	return rawBlock, nil
 }
 
 func NewReaderFromPath(path string) *Reader {
