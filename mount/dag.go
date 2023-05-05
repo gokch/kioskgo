@@ -109,7 +109,7 @@ func (d *Dag) Upload(ctx context.Context, path string, reader io.Reader) (cid.Ci
 	}
 
 	// put reader in dag
-	ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(reader, 1000))
+	ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(reader, int64(d.blockSize)))
 	if err != nil {
 		return cid.Cid{}, err
 	}
