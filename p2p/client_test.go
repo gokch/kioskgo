@@ -71,7 +71,7 @@ func TestClient(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ci, err := client.dag.Upload(ctx, "nilou.mp4", nil)
+	ci, err := client.dag.Upload(ctx, "1.jpg", nil)
 	require.NoError(t, err)
 
 	fmt.Println("connect | address | cid :", client.Self(), ci.String())
@@ -86,7 +86,7 @@ func TestClient(t *testing.T) {
 	require.NoError(t, err)
 
 	// ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
-	err = client2.dag.Download(ctx, ci, "nilou.mp4")
+	err = client2.dag.Download(ctx, ci, "angmond.jpg")
 	require.NoError(t, err)
 
 	time.Sleep(time.Second * 1200)

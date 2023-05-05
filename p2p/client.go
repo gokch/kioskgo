@@ -10,7 +10,6 @@ import (
 	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	"github.com/ipfs/go-cid"
-	"github.com/ipfs/go-datastore"
 	dsync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
@@ -38,9 +37,10 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	// init fs
 	fs := file.NewFileStore(cfg.RootPath)
 	fm := file.NewFileManager()
+	cs := file.NewCacheStore()
 
 	// init memory bs for dht
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(datastore.NewMapDatastore())))
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(cs)))
 	host, err := makeHost(cfg.RootPath)
 	if err != nil {
 		return nil, err

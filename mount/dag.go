@@ -10,8 +10,8 @@ import (
 	"github.com/ipfs/boxo/files"
 	"github.com/ipfs/boxo/ipld/merkledag"
 	unixfile "github.com/ipfs/boxo/ipld/unixfs/file"
-	"github.com/ipfs/boxo/ipld/unixfs/importer/balanced"
 	uih "github.com/ipfs/boxo/ipld/unixfs/importer/helpers"
+	trickle "github.com/ipfs/boxo/ipld/unixfs/importer/trickle"
 	"github.com/ipfs/go-cid"
 	chunk "github.com/ipfs/go-ipfs-chunker"
 	"github.com/multiformats/go-multicodec"
@@ -113,7 +113,7 @@ func (d *Dag) Upload(ctx context.Context, path string, reader io.Reader) (cid.Ci
 	if err != nil {
 		return cid.Cid{}, err
 	}
-	nd, err := balanced.Layout(ufsBuilder) // Arrange the graph with a balanced layout
+	nd, err := trickle.Layout(ufsBuilder) // Arrange the graph with a balanced layout
 	if err != nil {
 		return cid.Cid{}, err
 	}

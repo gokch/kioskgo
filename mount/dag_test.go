@@ -7,7 +7,6 @@ import (
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/exchange/offline"
-	"github.com/ipfs/go-datastore"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/stretchr/testify/require"
 )
@@ -21,8 +20,8 @@ func TestInitDHT(t *testing.T) {
 	fm := file.NewFileManager()
 
 	// make block store
-	mds := datastore.NewMapDatastore()
-	bs := blockstore.NewIdStore(blockstore.NewBlockstore(mds))
+	cs := file.NewCacheStore() // TODO : 왜안댐?
+	bs := blockstore.NewIdStore(blockstore.NewBlockstore(cs))
 	ex := offline.Exchange(bs)
 
 	// start uploder
@@ -32,12 +31,12 @@ func TestInitDHT(t *testing.T) {
 	require.NoError(t, err)
 
 	// ci, err := dag.Upload(ctx, "a/a.txt", bytes.NewReader(bytes.Repeat([]byte("abcdfaefedefede"), 1000000)))
-	ci, err := dag.Upload(ctx, "a/kokomi.png", nil)
+	ci, err := dag.Upload(ctx, "picture/1.jpg", nil)
 	require.NoError(t, err)
 
 	fmt.Println(ci.String())
 
-	err = dag.Download(ctx, ci, "b/kokomi.png")
+	err = dag.Download(ctx, ci, "picture2/1.jpg")
 	require.NoError(t, err)
 
 }
