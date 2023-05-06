@@ -37,7 +37,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	// init fs
 	fs := file.NewFileStore(cfg.RootPath)
 	fm := file.NewFileManager()
-	cs := file.NewCacheStore()
+	cs := file.NewCacheStore(time.Second * time.Duration(cfg.ExpireSec))
 
 	// init memory bs for dht
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(dsync.MutexWrap(cs)))

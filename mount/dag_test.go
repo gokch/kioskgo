@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/gokch/kioskgo/file"
 	"github.com/ipfs/boxo/exchange/offline"
@@ -20,7 +21,7 @@ func TestInitDHT(t *testing.T) {
 	fm := file.NewFileManager()
 
 	// make block store
-	cs := file.NewCacheStore() // TODO : 왜안댐?
+	cs := file.NewCacheStore(time.Second * 300)
 	bs := blockstore.NewIdStore(blockstore.NewBlockstore(cs))
 	ex := offline.Exchange(bs)
 
