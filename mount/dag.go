@@ -35,8 +35,8 @@ func NewDag(ctx context.Context, blockSize int, mount *Mount, rem exchange.Inter
 	// make dag service, save dht blocks
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
-		Maxlinks:  uih.DefaultLinksPerBlock, // Default max of 174 links per block
-		RawLeaves: true,                     // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
+		Maxlinks:  1024 * uih.DefaultLinksPerBlock, // Default max of 174 links per block
+		RawLeaves: true,                            // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
 		CidBuilder: cid.V1Builder{ // Use CIDv1 for all links
 			Codec:    uint64(multicodec.DagPb),
 			MhType:   uint64(multicodec.Sha3_256), // Use SHA3-256 as the hash function

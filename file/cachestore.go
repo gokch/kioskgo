@@ -19,7 +19,7 @@ var _ datastore.Datastore = (*Cachestore)(nil)
 var _ datastore.Batching = (*Cachestore)(nil)
 
 func NewCacheStore(ttl time.Duration) *Cachestore {
-	cache, _ := theine.NewBuilder[string, []byte](1000).Build()
+	cache, _ := theine.NewBuilder[string, []byte](1024 * 1024 * 1024).Build()
 	return &Cachestore{
 		cache: cache,
 		ttl:   ttl,

@@ -20,18 +20,14 @@ func NewFileStore(rootPath string) *FileStore {
 	}
 }
 
-/*
-	func (f *FileStore) Overwrite(path string, writer *Writer) error {
-		if f.Exist(path) {
-			err := f.Delete(path)
-			if err != nil {
-				return err
-			}
-		}
-
-		return f.Put(path, writer)
+func (f *FileStore) Overwrite(ctx context.Context, path string, writer *Writer) error {
+	err := f.Delete(ctx, path)
+	if err != nil {
+		return err
 	}
-*/
+
+	return f.Put(ctx, path, writer)
+}
 
 func (f *FileStore) Put(ctx context.Context, path string, writer *Writer) error {
 	fileName := filepath.Join(f.rootPath, path)
@@ -77,7 +73,7 @@ func (f *FileStore) Iterate(path string, fn func(fpath string, reader *Reader) e
 	})
 }
 
-func (f *FileStore) DeleteBlock(ctx context.Context, path string) error {
+func (f *FileStore) Delete(ctx context.Context, path string) error {
 	fullPath := filepath.Join(f.rootPath, path)
 	return os.Remove(fullPath)
 }

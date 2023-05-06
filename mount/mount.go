@@ -105,7 +105,7 @@ func (f *Mount) DeleteBlock(ctx context.Context, c cid.Cid) error {
 	if info == nil {
 		return nil
 	}
-	err2 := f.fs.DeleteBlock(ctx, info.Path)
+	err2 := f.fs.Delete(ctx, info.Path)
 
 	// if we successfully removed something from the blockstore, but the
 	// filestore didnt have it, return success
