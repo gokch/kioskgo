@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestInitDHT(t *testing.T) {
+func TestDag(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -32,12 +32,12 @@ func TestInitDHT(t *testing.T) {
 	require.NoError(t, err)
 
 	// ci, err := dag.Upload(ctx, "a/a.txt", bytes.NewReader(bytes.Repeat([]byte("abcdfaefedefede"), 1000000)))
-	ci, err := dag.Upload(ctx, "picture/1.jpg", nil)
+	ci, err := dag.Upload(ctx, "picture", nil)
 	require.NoError(t, err)
 
 	fmt.Println(ci.String())
 
-	err = dag.Download(ctx, ci, "picture2/1.jpg")
+	err = dag.Download(ctx, ci, "picture2")
 	require.NoError(t, err)
 
 }
