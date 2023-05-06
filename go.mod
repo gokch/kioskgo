@@ -3,7 +3,6 @@ module github.com/gokch/kioskgo
 go 1.19
 
 require (
-	github.com/bufbuild/connect-go v1.6.0
 	github.com/ipfs/boxo v0.8.0
 	github.com/ipfs/go-cid v0.4.0
 	github.com/ipfs/go-datastore v0.6.0
@@ -11,7 +10,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.8.0
 	github.com/multiformats/go-multicodec v0.8.1
 	github.com/stretchr/testify v1.8.2
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.30.0 // indirect
 )
 
 require (
