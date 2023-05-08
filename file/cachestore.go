@@ -62,7 +62,7 @@ func (ds *Cachestore) Delete(ctx context.Context, key datastore.Key) (err error)
 }
 
 func (ds *Cachestore) Query(ctx context.Context, q query.Query) (query.Results, error) {
-	return nil, errors.New("TODO implement query for rueidis datastore?")
+	return nil, errors.New("TODO is need implement query for cachestore?")
 }
 
 func (ds *Cachestore) Batch(ctx context.Context) (datastore.Batch, error) {

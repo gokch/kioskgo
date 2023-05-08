@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gokch/kioskgo/p2p"
+	"github.com/gokch/ipfs_mount/p2p"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-log"
 	"github.com/spf13/cobra"

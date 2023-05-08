@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gokch/kioskgo/file"
-	"github.com/gokch/kioskgo/mount"
+	"github.com/gokch/ipfs_mount/file"
+	"github.com/gokch/ipfs_mount/mount"
 	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	"github.com/ipfs/go-cid"

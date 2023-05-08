@@ -1,4 +1,4 @@
-module github.com/gokch/kioskgo
+module github.com/gokch/ipfs_mount
 
 go 1.19
 
@@ -10,11 +10,12 @@ require (
 	github.com/multiformats/go-multiaddr v0.8.0
 	github.com/multiformats/go-multicodec v0.8.1
 	github.com/stretchr/testify v1.8.2
-	google.golang.org/protobuf v1.30.0 // indirect
+	google.golang.org/protobuf v1.30.0
 )
 
 require (
 	github.com/Yiling-J/theine-go v0.2.2
+	github.com/bufbuild/connect-go v1.7.0
 	github.com/ipfs/go-ipfs-blockstore v1.3.0
 	github.com/ipfs/go-ipfs-chunker v0.0.5
 	github.com/ipfs/go-ipfs-posinfo v0.0.1

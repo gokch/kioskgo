@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gokch/kioskgo/file"
+	"github.com/gokch/ipfs_mount/file"
 	"github.com/ipfs/boxo/exchange/offline"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/stretchr/testify/require"

@@ -3,7 +3,7 @@ package mount
 import (
 	"context"
 
-	"github.com/gokch/kioskgo/file"
+	"github.com/gokch/ipfs_mount/file"
 	blockstore "github.com/ipfs/boxo/blockstore"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"

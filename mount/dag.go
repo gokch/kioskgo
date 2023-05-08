@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/gokch/kioskgo/file"
+	"github.com/gokch/ipfs_mount/file"
 	"github.com/ipfs/boxo/blockservice"
 	"github.com/ipfs/boxo/exchange"
 	"github.com/ipfs/boxo/files"
