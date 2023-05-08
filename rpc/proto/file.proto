@@ -4,7 +4,7 @@ package proto;
 option go_package = "/rpc";
 
 message File {
-    bytes cid = 1;
+    string cid = 1;
     string path = 2;
     Metadata metadata = 3;
 }
