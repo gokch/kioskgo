@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "/rpc";
+
+import "file.proto";
+import "peer.proto";
+
+service ClientService {
+    rpc Connect(ConnectRequest) returns (ConnectResponse) {}
+    rpc Disconnect(DisconnectRequest) returns (DisconnectResponse) {}
+    rpc IsConnect(IsConnectRequest) returns (IsConnectResponse) {}
+
+    rpc Upload(UploadRequest) returns (UploadResponse) {}
+    rpc Download(DownloadRequest) returns (DownloadResponse) {}
+}
+
+message Response {
+    string status = 1;
+    uint64 code = 2;
+    string err_msg = 3;
+}
+
+message ConnectRequest {
+    repeated Peer peers = 1;
+}
+
+message ConnectResponse {
+    Response response = 1;
+    repeated Peer succeed = 2;
+    repeated Peer failed = 3;
+}
+
+message DisconnectRequest {
+    repeated Peer peers = 1;
+}
+
+message DisconnectResponse {
+    Response response = 1;
+}
+
+message IsConnectRequest {
+    repeated Peer peers = 1;
+}
+
+message IsConnectResponse {
+    Response response = 1;
+    repeated Peer connects = 2;
+    repeated Peer unconnects = 3;
+}
+
+message UploadRequest {
+    repeated File files = 1;
+}
+
+message UploadResponse {
+    Response response = 1;
+    repeated File succeed = 2;
+    repeated File failed = 3;
+}
+
+message DownloadRequest {
+    repeated File files = 1;
+}
+
+message DownloadResponse {
+    Response response = 1;
+    repeated File succeed = 2;
+    repeated File failed = 3;
+}

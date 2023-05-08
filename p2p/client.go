@@ -2,7 +2,6 @@ package p2p
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/gokch/ipfs_mount/file"
@@ -12,9 +11,14 @@ import (
 	"github.com/ipfs/go-cid"
 	dsync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	"github.com/ipfs/go-log"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/panjf2000/ants"
+)
+
+var (
+	logger = log.Logger("client")
 )
 
 type ClientConfig struct {
@@ -100,6 +104,14 @@ func (c *Client) Connect(ctx context.Context, targetPeer string) error {
 	return c.host.Connect(ctx, *addrInfo)
 }
 
+func (c *Client) Disconnect(ctx context.Context, targetPeer string) error {
+	addrInfo, err := encodeAddrInfo(targetPeer)
+	if err != nil {
+		return err
+	}
+	return c.host.Network().ClosePeer(addrInfo.ID)
+}
+
 func (c *Client) Close() error {
 	for c.mq.Running() > 0 {
 		time.Sleep(time.Second)
@@ -120,9 +132,9 @@ func (c *Client) Download(ctx context.Context, cid cid.Cid, path string) error {
 	return c.mq.Submit(func() {
 		err := c.dag.Download(ctx, cid, path)
 		if err != nil {
-			fmt.Println("download not finished")
+			logger.Errorf("download is failed | cid : %s | path : %s | err : %s", cid.String(), path, err.Error())
 		} else {
-			fmt.Println("download finished")
+			logger.Infof("download is succeed | cid : %s | path : %s", cid.String(), path)
 		}
 	})
 }
@@ -131,9 +143,9 @@ func (c *Client) Upload(ctx context.Context, cid cid.Cid, path string) error {
 	return c.mq.Submit(func() {
 		cid, err := c.dag.Upload(ctx, path, nil)
 		if err != nil {
-			fmt.Println("upload not finished")
+			logger.Errorf("upload is failed | path : ", path, " | err : ", err.Error())
 		} else {
-			fmt.Println("upload finished | cid : ", cid.String())
+			logger.Infof("upload is succeed | path : ", path, " | cid : ", cid.String())
 		}
 	})
 }

@@ -55,7 +55,7 @@ func main() {
 
 func rootRun(cmd *cobra.Command, args []string) {
 	log.SetLogLevel("*", "debug")
-	logger := log.Logger("client")
+	logger := log.Logger("cli")
 
 	var ctx context.Context
 	var cancel context.CancelFunc
@@ -68,7 +68,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 		defer cancel()
 	}
 
-	logger.Info("start client")
+	logger.Info("start cli")
 
 	client, err := p2p.NewClient(context.Background(), &p2p.ClientConfig{
 		RootPath:   rootPath,
