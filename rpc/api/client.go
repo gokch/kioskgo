@@ -7,7 +7,6 @@ import (
 	"github.com/gokch/ipfs_mount/p2p"
 	"github.com/gokch/ipfs_mount/rpc"
 	"github.com/gokch/ipfs_mount/rpc/rpcconnect"
-	"github.com/ipfs/go-cid"
 )
 
 var _ rpcconnect.ClientServiceClient = (*ClientServiceApi)(nil)
@@ -55,19 +54,12 @@ func (c *ClientServiceApi) Upload(ctx context.Context, req *connect.Request[rpc.
 	failed := make([]*rpc.File, 0, 10)
 
 	for _, file := range req.Msg.GetFiles() {
-		cid, err := cid.Parse(file.GetCid())
-		if err != nil {
-			failed = append(failed, file)
-			continue
-		}
-
-		err = c.client.Upload(ctx, cid, file.GetPath())
+		err := c.client.Upload(ctx, file.GetPath(), nil)
 		if err != nil {
 			failed = append(failed, file)
 			continue
 		}
 		succeed = append(succeed, file)
-
 	}
 	uploadResp := &rpc.UploadResponse{
 		Response: &rpc.Response{},
@@ -83,13 +75,7 @@ func (c *ClientServiceApi) Download(ctx context.Context, req *connect.Request[rp
 	failed := make([]*rpc.File, 0, 10)
 
 	for _, file := range req.Msg.GetFiles() {
-		cid, err := cid.Parse(file.GetCid())
-		if err != nil {
-			failed = append(failed, file)
-			continue
-		}
-
-		err = c.client.Download(ctx, cid, file.GetPath())
+		err := c.client.Download(ctx, file.GetCid(), file.GetPath())
 		if err != nil {
 			failed = append(failed, file)
 			continue

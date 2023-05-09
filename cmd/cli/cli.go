@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gokch/ipfs_mount/p2p"
-	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-log"
 	"github.com/spf13/cobra"
 )
@@ -82,13 +81,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 	}
 
 	for i := range cids {
-		path := paths[i]
-		ci, err := cid.Parse(cids[i])
-		if err != nil {
-			logger.Warn(err, fmt.Sprint("cid :", cids[i], "invalid cid"))
-			return
-		}
-		err = client.Download(ctx, ci, path)
+		err = client.Download(ctx, cids[i], paths[i])
 		if err != nil {
 			logger.Warn(err, fmt.Sprint("cid :", cids[i], "get cid is failed"))
 			return

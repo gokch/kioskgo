@@ -2,13 +2,13 @@ package p2p
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/gokch/ipfs_mount/file"
 	"github.com/gokch/ipfs_mount/mount"
 	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
-	"github.com/ipfs/go-cid"
 	dsync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	"github.com/ipfs/go-log"
@@ -128,20 +128,20 @@ func (c *Client) Close() error {
 	return nil
 }
 
-func (c *Client) Download(ctx context.Context, cid cid.Cid, path string) error {
+func (c *Client) Download(ctx context.Context, cid string, path string) error {
 	return c.mq.Submit(func() {
 		err := c.dag.Download(ctx, cid, path)
 		if err != nil {
-			logger.Errorf("download is failed | cid : %s | path : %s | err : %s", cid.String(), path, err.Error())
+			logger.Errorf("download is failed | cid : %s | path : %s | err : %s", cid, path, err.Error())
 		} else {
-			logger.Infof("download is succeed | cid : %s | path : %s", cid.String(), path)
+			logger.Infof("download is succeed | cid : %s | path : %s", cid, path)
 		}
 	})
 }
 
-func (c *Client) Upload(ctx context.Context, cid cid.Cid, path string) error {
+func (c *Client) Upload(ctx context.Context, path string, reader io.Reader) error {
 	return c.mq.Submit(func() {
-		cid, err := c.dag.Upload(ctx, path, nil)
+		cid, err := c.dag.Upload(ctx, path, reader)
 		if err != nil {
 			logger.Errorf("upload is failed | path : ", path, " | err : ", err.Error())
 		} else {

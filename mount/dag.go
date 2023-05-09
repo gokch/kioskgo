@@ -67,7 +67,12 @@ func NewDag(ctx context.Context, blockSize int, mount *Mount, rem exchange.Inter
 	return Dag, nil
 }
 
-func (d *Dag) Download(ctx context.Context, ci cid.Cid, path string) error {
+func (d *Dag) Download(ctx context.Context, cidstr string, path string) error {
+	ci, err := cid.Parse(cidstr)
+	if err != nil {
+		return err
+	}
+
 	nd, err := d.Dag.Dagserv.Get(ctx, ci)
 	if err != nil {
 		return err

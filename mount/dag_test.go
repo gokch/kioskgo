@@ -37,7 +37,7 @@ func TestDag(t *testing.T) {
 
 	fmt.Println(ci.String())
 
-	err = dag.Download(ctx, ci, "picture2")
+	err = dag.Download(ctx, ci.String(), "picture2")
 	require.NoError(t, err)
 
 }

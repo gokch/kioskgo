@@ -71,7 +71,7 @@ func TestClient(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ci, err := client.dag.Upload(ctx, "1.jpg", nil)
+	ci, err := client.dag.Upload(ctx, "1.png", nil)
 	require.NoError(t, err)
 
 	fmt.Println("connect | address | cid :", client.Self(), ci.String())
@@ -79,19 +79,18 @@ func TestClient(t *testing.T) {
 	// download
 	client2, err := NewClient(ctx, &ClientConfig{
 		RootPath:   "./cpypath",
-		Peers:      []string{client.Self()},
+		Peers:      []string{"/ip4/192.168.1.223/tcp/45577/p2p/12D3KooWLYobD2oQgX1U7E9iYszmDZK8tbYZR6kJsScH4sHfBKYA"},
 		SizeWorker: 1,
 		ExpireSec:  600,
 	})
 	require.NoError(t, err)
 
-	// ci := cid.MustParse("bafkrmicdciiojqhjoclb5mbcq45a6opzt6jaywgqc7w3xld4cv2ylwxi3e")
-	err = client2.dag.Download(ctx, ci, "angmond.jpg")
+	err = client2.dag.Download(ctx, ci.String(), "2.txt")
 	require.NoError(t, err)
 
 	time.Sleep(time.Second * 1200)
 
-	client.Close()
+	// client.Close()
 }
 
 func TestForwarding(t *testing.T) {
