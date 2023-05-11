@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	github.com/Yiling-J/theine-go v0.2.2
+	github.com/Yiling-J/theine-go v0.2.5
 	github.com/bufbuild/connect-go v1.7.0
 	github.com/ipfs/go-ipfs-blockstore v1.3.0
 	github.com/ipfs/go-ipfs-chunker v0.0.5

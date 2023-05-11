@@ -2,7 +2,6 @@ package file
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	theine "github.com/Yiling-J/theine-go"
@@ -61,8 +60,17 @@ func (ds *Cachestore) Delete(ctx context.Context, key datastore.Key) (err error)
 	return nil
 }
 
+// TODO.. is it necessary?
 func (ds *Cachestore) Query(ctx context.Context, q query.Query) (query.Results, error) {
-	return nil, errors.New("TODO is need implement query for cachestore?")
+	var keys []string = make([]string, 0, 1024)
+	var vals [][]byte = make([][]byte, 0, 1024)
+	ds.cache.Range(func(key string, value []byte) bool {
+		keys = append(keys, key)
+		vals = append(vals, value)
+		return true
+	})
+	entries := query.ResultEntriesFrom(keys, vals)
+	return query.ResultsWithEntries(q, entries), nil
 }
 
 func (ds *Cachestore) Batch(ctx context.Context) (datastore.Batch, error) {

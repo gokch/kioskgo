@@ -77,8 +77,3 @@ func (f *FileStore) Delete(ctx context.Context, path string) error {
 	fullPath := filepath.Join(f.rootPath, path)
 	return os.Remove(fullPath)
 }
-
-// cids
-const (
-	DEF_PATH_CID_INFO = "/.info"
-)
