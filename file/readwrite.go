@@ -53,8 +53,23 @@ type Writer struct {
 	files.Node
 }
 
+func NewWriterFromPath(path string) *Writer {
+	var err error
+
+	stat, err := os.Stat(path)
+	if err != nil {
+		return nil
+	}
+
+	nd, err := files.NewSerialFile(path, true, stat)
+	if err != nil {
+		return nil
+	}
+	return NewWriter(nd)
+}
+
 func NewWriterFromBytes(bt []byte) *Writer {
-	writer := files.NewReaderFile(bytes.NewReader(bt)).(*files.ReaderFile)
+	writer := files.NewReaderFile(bytes.NewReader(bt))
 	return NewWriter(writer)
 }
 

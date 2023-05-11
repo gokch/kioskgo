@@ -10,7 +10,8 @@ import (
 )
 
 func TestStoreNewGet(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	fs := NewFileStore("rootpath")
 	require.NotNil(t, fs)
@@ -30,6 +31,28 @@ func TestStoreNewGet(t *testing.T) {
 
 	err = fs.Delete(ctx, "")
 	require.NoError(t, err)
+}
+
+func TestStoreFolder(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	fs := NewFileStore("rootpath")
+	require.NotNil(t, fs)
+
+	data1 := []byte("test")
+	err := fs.Put(ctx, "test/abc/d/e.txt", NewWriterFromBytes(data1))
+	require.NoError(t, err)
+	err = fs.Put(ctx, "test/abc/d/f.txt", NewWriterFromBytes(data1))
+	require.NoError(t, err)
+	err = fs.Put(ctx, "test/abc/d/g.txt", NewWriterFromBytes(data1))
+	require.NoError(t, err)
+
+	err = fs.Put(ctx, "new", NewWriterFromPath("./rootpath/test/abc/d"))
+	require.NoError(t, err)
+
+	// err = fs.Delete(ctx, "./")
+	// require.NoError(t, err)
 }
 
 func TestStoreIterate(t *testing.T) {
