@@ -37,10 +37,6 @@ func (f *Store) Put(ctx context.Context, path string, writer *Writer) error {
 		if err != nil {
 			return err
 		}
-		err = writer.Close()
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
