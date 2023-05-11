@@ -6,6 +6,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/ipfs/boxo/files"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +24,7 @@ func TestStoreNewGet(t *testing.T) {
 	reader, err := fs.Get(ctx, "test/abc/d/e.txt")
 	require.NoError(t, err)
 
-	data2, err := io.ReadAll(reader)
+	data2, err := reader.Get()
 	require.NoError(t, err)
 	reader.Close()
 
@@ -48,11 +49,16 @@ func TestStoreFolder(t *testing.T) {
 	err = fs.Put(ctx, "test/abc/d/g.txt", NewWriterFromBytes(data1))
 	require.NoError(t, err)
 
-	err = fs.Put(ctx, "new", NewWriterFromPath("./rootpath/test/abc/d"))
+	// get folder
+	reader, err := fs.Get(ctx, "test/abc/d")
 	require.NoError(t, err)
 
-	// err = fs.Delete(ctx, "./")
-	// require.NoError(t, err)
+	// put folder
+	err = fs.Put(ctx, "new", NewWriter(reader.Node))
+	require.NoError(t, err)
+
+	err = fs.Delete(ctx, "")
+	require.NoError(t, err)
 }
 
 func TestStoreIterate(t *testing.T) {
@@ -73,9 +79,14 @@ func TestStoreIterate(t *testing.T) {
 
 	// iterate
 	err = fs.Iterate("", func(fpath string, reader *Reader) error {
-		out, err := io.ReadAll(reader)
-		require.NoError(t, err)
-		fmt.Println(reader.AbsPath(), out)
+		switch data := reader.Node.(type) {
+		case files.Directory:
+			fmt.Println(fpath, "is a directory")
+		case *files.ReaderFile:
+			out, err := io.ReadAll(data)
+			require.NoError(t, err)
+			fmt.Println(data.AbsPath(), out)
+		}
 		return nil
 	})
 	require.NoError(t, err)

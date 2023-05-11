@@ -2,8 +2,6 @@ package p2p
 
 import (
 	"context"
-	"github.com/ipfs/go-log"
-	"io"
 	"time"
 
 	"github.com/gokch/ipfs_mount/file"
@@ -12,6 +10,7 @@ import (
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	dsync "github.com/ipfs/go-datastore/sync"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	"github.com/ipfs/go-log"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/panjf2000/ants"
@@ -155,7 +154,7 @@ func (c *Client) Download(ctx context.Context, cid string, path string) error {
 }
 
 // Upload uploads a file to the network.
-func (c *Client) Upload(ctx context.Context, path string, reader io.Reader) error {
+func (c *Client) Upload(ctx context.Context, path string, reader *file.Reader) error {
 	return c.mq.Submit(func() {
 		cid, err := c.dag.Upload(ctx, path, reader)
 		if err != nil {

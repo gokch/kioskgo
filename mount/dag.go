@@ -2,7 +2,6 @@ package mount
 
 import (
 	"context"
-	"io"
 
 	"github.com/gokch/ipfs_mount/file"
 	"github.com/ipfs/boxo/blockservice"
@@ -14,6 +13,7 @@ import (
 	trickle "github.com/ipfs/boxo/ipld/unixfs/importer/trickle"
 	"github.com/ipfs/go-cid"
 	chunk "github.com/ipfs/go-ipfs-chunker"
+	ipld "github.com/ipfs/go-ipld-format"
 	"github.com/multiformats/go-multicodec"
 )
 
@@ -95,13 +95,13 @@ func (d *Dag) Download(ctx context.Context, cidstr string, path string) error {
 	return nil
 }
 
-func (d *Dag) Upload(ctx context.Context, path string, reader io.Reader) (cid.Cid, error) {
+func (d *Dag) Upload(ctx context.Context, path string, reader *file.Reader) (cid.Cid, error) {
 	var err error
 
 	// if reader != nil, put reader in fileStore
 	// if already exist in filepath, return err
 	if reader != nil {
-		err = d.mount.fs.Put(ctx, path, file.NewWriter(files.NewReaderFile(reader)))
+		err = d.mount.fs.Put(ctx, path, file.NewWriter(reader.Node))
 		if err != nil {
 			return cid.Cid{}, err
 		}
@@ -113,14 +113,20 @@ func (d *Dag) Upload(ctx context.Context, path string, reader io.Reader) (cid.Ci
 		return cid.Cid{}, err
 	}
 
-	// put reader in dag
-	ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(reader, int64(d.blockSize)))
-	if err != nil {
-		return cid.Cid{}, err
-	}
-	nd, err := trickle.Layout(ufsBuilder) // Arrange the graph with a balanced layout
-	if err != nil {
-		return cid.Cid{}, err
+	var nd ipld.Node
+	switch data := reader.Node.(type) {
+	case files.Directory:
+		// TODO
+	case *files.ReaderFile:
+		// put reader in dag
+		ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(data, int64(d.blockSize)))
+		if err != nil {
+			return cid.Cid{}, err
+		}
+		nd, err = trickle.Layout(ufsBuilder) // Arrange the graph with a balanced layout
+		if err != nil {
+			return cid.Cid{}, err
+		}
 	}
 
 	// put cids in fm

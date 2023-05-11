@@ -2,6 +2,7 @@ package file
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 
@@ -9,15 +10,35 @@ import (
 )
 
 type Reader struct {
-	*files.ReaderFile
+	files.Node
+}
+
+func (r *Reader) Get() ([]byte, error) {
+	return r.GetBlock(0, 0)
 }
 
 func (r *Reader) GetBlock(offset, size int) ([]byte, error) {
-	if _, err := r.Seek(int64(offset), io.SeekStart); err != nil {
+	file, ok := r.Node.(*files.ReaderFile)
+	if ok != true {
+		return nil, errors.New("cannot read block from directory")
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+	if size <= 0 {
+		s, err := file.Size()
+		if err != nil {
+			return nil, err
+		}
+		size = int(s)
+	}
+
+	if _, err := file.Seek(int64(offset), io.SeekStart); err != nil {
 		return nil, err
 	}
 	rawBlock := make([]byte, size)
-	if _, err := r.Read(rawBlock); err != nil {
+	if _, err := file.Read(rawBlock); err != nil {
 		return nil, err
 	}
 
@@ -25,17 +46,12 @@ func (r *Reader) GetBlock(offset, size int) ([]byte, error) {
 }
 
 func NewReaderFromPath(path string) *Reader {
-	file, err := os.Open(path)
+	stat, err := os.Stat(path)
 	if err != nil {
 		return nil
 	}
 
-	stat, err := file.Stat()
-	if err != nil {
-		return nil
-	}
-
-	reader, err := files.NewReaderPathFile(path, file, stat)
+	reader, err := files.NewSerialFile(path, true, stat)
 	if err != nil {
 		return nil
 	}
@@ -43,9 +59,9 @@ func NewReaderFromPath(path string) *Reader {
 	return NewReader(reader)
 }
 
-func NewReader(reader *files.ReaderFile) *Reader {
+func NewReader(reader files.Node) *Reader {
 	return &Reader{
-		ReaderFile: reader,
+		Node: reader,
 	}
 }
 

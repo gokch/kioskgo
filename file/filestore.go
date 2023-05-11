@@ -82,12 +82,6 @@ func (f *Store) Iterate(path string, fn func(fpath string, reader *Reader) error
 		return err
 	}
 	return files.Walk(sf, func(fpath string, node files.Node) error {
-		if rf, ok := node.(*files.ReaderFile); ok {
-			defer rf.Close()
-			if err = fn(fpath, NewReader(rf)); err != nil {
-				return err
-			}
-		}
-		return nil // ignore directory
+		return fn(fpath, NewReader(node))
 	})
 }
