@@ -51,7 +51,7 @@ func (f *Store) Get(ctx context.Context, path string) (*Reader, error) {
 // Delete deletes the file at the given path.
 func (f *Store) Delete(ctx context.Context, path string) error {
 	fullPath := filepath.Join(f.rootPath, path)
-	return os.Remove(fullPath)
+	return os.RemoveAll(fullPath)
 }
 
 // Utility functions

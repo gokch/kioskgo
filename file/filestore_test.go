@@ -24,8 +24,12 @@ func TestStoreNewGet(t *testing.T) {
 
 	data2, err := io.ReadAll(reader)
 	require.NoError(t, err)
+	reader.Close()
 
 	require.Equal(t, data1, data2)
+
+	err = fs.Delete(ctx, "")
+	require.NoError(t, err)
 }
 
 func TestStoreIterate(t *testing.T) {
