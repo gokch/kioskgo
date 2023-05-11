@@ -8,9 +8,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gokch/ipfs_mount/p2p"
 	"github.com/ipfs/go-log"
 	"github.com/spf13/cobra"
+
+	"github.com/gokch/ipfs_mount/p2p"
 )
 
 var (
@@ -76,7 +77,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 		ExpireSec:  int(expireSec),
 	})
 	if err != nil {
-		logger.Warn(err, "init client is failed")
+		logger.Warn(err, "init client.md is failed")
 		return
 	}
 
@@ -101,8 +102,8 @@ func handleKillSig(handler func(), logger log.EventLogger) {
 
 	signal.Notify(sigChannel, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	go func() {
-		for signal := range sigChannel {
-			logger.Info("Receive signal %s, Shutting down...", signal)
+		for sig := range sigChannel {
+			logger.Info("Receive signal %s, Shutting down...", sig)
 			handler()
 			os.Exit(1)
 		}

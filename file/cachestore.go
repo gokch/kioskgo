@@ -9,32 +9,36 @@ import (
 	query "github.com/ipfs/go-datastore/query"
 )
 
-type Cachestore struct {
+// Cache is a cache that provides methods for storing and retrieving data.
+type Cache struct {
+	// cache is a theine cache that stores the data.
 	cache *theine.Cache[string, []byte]
-	ttl   time.Duration
+	// ttl is the time to live for the data in the cache.
+	ttl time.Duration
 }
 
-var _ datastore.Datastore = (*Cachestore)(nil)
-var _ datastore.Batching = (*Cachestore)(nil)
-
-func NewCacheStore(ttl time.Duration) *Cachestore {
+// NewCacheStore creates a new cache with the given ttl.
+func NewCacheStore(ttl time.Duration) *Cache {
 	cache, _ := theine.NewBuilder[string, []byte](1024 * 1024 * 1024).Build()
-	return &Cachestore{
+	return &Cache{
 		cache: cache,
 		ttl:   ttl,
 	}
 }
 
-func (ds *Cachestore) Put(ctx context.Context, key datastore.Key, value []byte) error {
+// Put stores the given key and value in the cache.
+func (ds *Cache) Put(ctx context.Context, key datastore.Key, value []byte) error {
 	ds.cache.SetWithTTL(key.String(), value, 0, ds.ttl)
 	return nil
 }
 
-func (ds *Cachestore) Sync(ctx context.Context, prefix datastore.Key) error {
+// Sync synchronizes the cache with the underlying datastore.
+func (ds *Cache) Sync(ctx context.Context, prefix datastore.Key) error {
 	return nil
 }
 
-func (ds *Cachestore) Get(ctx context.Context, key datastore.Key) (value []byte, err error) {
+// Get retrieves the value for the given key from the cache.
+func (ds *Cache) Get(ctx context.Context, key datastore.Key) (value []byte, err error) {
 	value, success := ds.cache.Get(key.String())
 	if !success {
 		return nil, datastore.ErrNotFound
@@ -42,12 +46,14 @@ func (ds *Cachestore) Get(ctx context.Context, key datastore.Key) (value []byte,
 	return value, nil
 }
 
-func (ds *Cachestore) Has(ctx context.Context, key datastore.Key) (exists bool, err error) {
+// Has checks if the cache contains the given key.
+func (ds *Cache) Has(ctx context.Context, key datastore.Key) (exists bool, err error) {
 	val, _ := ds.cache.Get(key.String())
 	return val != nil, nil
 }
 
-func (ds *Cachestore) GetSize(ctx context.Context, key datastore.Key) (size int, err error) {
+// GetSize retrieves the size of the value for the given key from the cache.
+func (ds *Cache) GetSize(ctx context.Context, key datastore.Key) (size int, err error) {
 	value, _ := ds.cache.Get(key.String())
 	if value == nil {
 		return -1, datastore.ErrNotFound
@@ -55,15 +61,16 @@ func (ds *Cachestore) GetSize(ctx context.Context, key datastore.Key) (size int,
 	return len(value), nil
 }
 
-func (ds *Cachestore) Delete(ctx context.Context, key datastore.Key) (err error) {
+// Delete deletes the value for the given key from the cache.
+func (ds *Cache) Delete(ctx context.Context, key datastore.Key) (err error) {
 	ds.cache.Delete(key.String())
 	return nil
 }
 
-// TODO.. is it necessary?
-func (ds *Cachestore) Query(ctx context.Context, q query.Query) (query.Results, error) {
-	var keys []string = make([]string, 0, 1024)
-	var vals [][]byte = make([][]byte, 0, 1024)
+// Query executes the given query on the cache.
+func (ds *Cache) Query(ctx context.Context, q query.Query) (query.Results, error) {
+	var keys = make([]string, 0, 1024)
+	var vals = make([][]byte, 0, 1024)
 	ds.cache.Range(func(key string, value []byte) bool {
 		keys = append(keys, key)
 		vals = append(vals, value)
@@ -73,11 +80,13 @@ func (ds *Cachestore) Query(ctx context.Context, q query.Query) (query.Results, 
 	return query.ResultsWithEntries(q, entries), nil
 }
 
-func (ds *Cachestore) Batch(ctx context.Context) (datastore.Batch, error) {
+// Batch returns a datastore.Batch that can be used to batch operations on the cache.
+func (ds *Cache) Batch(ctx context.Context) (datastore.Batch, error) {
 	return nil, datastore.ErrBatchUnsupported
 }
 
-func (ds *Cachestore) Close() error {
+// Close closes the cache.
+func (ds *Cache) Close() error {
 	ds.cache.Close()
 	return nil
 }

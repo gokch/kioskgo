@@ -15,13 +15,13 @@ import (
 )
 
 var (
-	privKeyFileName = ".key"
+	privateKeyFileName = ".key"
 	// sha256.Sum256([]byte("smpeople"))
 	psk = []byte{20, 174, 197, 74, 226, 233, 89, 172, 139, 157, 212, 111, 186, 100, 161, 59, 207, 51, 57, 139, 94, 184, 106, 212, 81, 159, 98, 18, 102, 118, 205, 149}
 )
 
 func makeHost(rootPath string) (host host.Host, err error) {
-	privKey, _ := os.ReadFile(filepath.Join(rootPath, privKeyFileName))
+	privKey, _ := os.ReadFile(filepath.Join(rootPath, privateKeyFileName))
 
 	var priv crypto.PrivKey
 	if privKey == nil {
@@ -52,7 +52,7 @@ func makeHost(rootPath string) (host host.Host, err error) {
 		return nil, err
 	}
 
-	err = os.WriteFile(filepath.Join(rootPath, privKeyFileName), privKey, 0755)
+	err = os.WriteFile(filepath.Join(rootPath, privateKeyFileName), privKey, 0755)
 	if err != nil {
 		return nil, err
 	}

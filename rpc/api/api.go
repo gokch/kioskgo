@@ -8,8 +8,6 @@ import (
 )
 
 func RegisterAPI(mux *http.ServeMux, client *p2p.Client) {
-
 	clientPath, clientHandler := rpcconnect.NewClientServiceHandler(NewClientServiceApi(client))
 	mux.Handle(clientPath, clientHandler)
-
 }

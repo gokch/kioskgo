@@ -8,54 +8,67 @@ import (
 	format "github.com/ipfs/go-ipld-format"
 )
 
-// file manager by paths or cids
-type FileManager struct {
-	cids map[cid.Cid]*FileInfo // map[cids]FileInfo
+// Manager is a file manager that provides methods for reading, writing, and deleting files.
+type Manager struct {
+	// cidMapper is a map of CIDs to file information.
+	cidMapper map[cid.Cid]*FileInfo
 }
 
-func NewFileManager() *FileManager {
-	return &FileManager{
-		cids: map[cid.Cid]*FileInfo{},
+// NewFileManager creates a new file manager.
+func NewFileManager() *Manager {
+	return &Manager{
+		cidMapper: map[cid.Cid]*FileInfo{},
 	}
 }
 
-func (fm *FileManager) PutNode(nd format.Node, path string, blockSize int) {
+// PutNode writes the given node to the file manager.
+func (fm *Manager) PutNode(nd format.Node, path string, blockSize int) {
 	size, _ := nd.Size()
 	fm.Put(nd.Cid(), path, 0, int(size)) // put root cid
-	for i, link := range nd.Links() {    // put link cids
+	for i, link := range nd.Links() {    // put link cidMapper
 		fm.Put(link.Cid, filepath.Join(path, link.Name), i*blockSize, blockSize)
 	}
 }
 
-func (fm *FileManager) Put(ci cid.Cid, path string, offset, size int) {
-	// add cids
-	fm.cids[ci] = NewFileInfo(ci, path, offset, size)
+// Put writes the given CID and file information to the file manager.
+func (fm *Manager) Put(ci cid.Cid, path string, offset, size int) {
+	// add cidMapper
+	fm.cidMapper[ci] = NewFileInfo(ci, path, offset, size)
 }
 
-func (fm *FileManager) Get(cid cid.Cid) *FileInfo {
-	return fm.cids[cid]
+// Get returns the file information for the given CID.
+func (fm *Manager) Get(cid cid.Cid) *FileInfo {
+	return fm.cidMapper[cid]
 }
 
-func (f *FileManager) Has(ctx context.Context, ci cid.Cid) bool {
-	_, ok := f.cids[ci]
+// Has checks if the file manager contains the given CID.
+func (fm *Manager) Has(ctx context.Context, ci cid.Cid) bool {
+	_, ok := fm.cidMapper[ci]
 	return ok
 }
 
-func (f *FileManager) AllKeysChan(ctx context.Context) (<-chan cid.Cid, error) {
+// AllKeysChan returns a channel that emits all of the CIDs in the file manager.
+func (fm *Manager) AllKeysChan(ctx context.Context) (<-chan cid.Cid, error) {
 	out := make(chan cid.Cid)
-	for ci := range f.cids {
+	for ci := range fm.cidMapper {
 		out <- ci
 	}
 	return out, nil
 }
 
+// FileInfo is a struct that contains information about a file.
 type FileInfo struct {
-	Path   string
-	Ci     cid.Cid
+	// Path is the path to the file.
+	Path string
+	// Ci is the CID of the file.
+	Ci cid.Cid
+	// Offset is the offset of the file in the file system.
 	Offset int
-	Size   int
+	// Size is the size of the file.
+	Size int
 }
 
+// NewFileInfo creates a new FileInfo struct.
 func NewFileInfo(ci cid.Cid, path string, offset, size int) *FileInfo {
 	return &FileInfo{
 		Path:   path,

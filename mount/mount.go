@@ -16,14 +16,14 @@ import (
 var logger = logging.Logger("mount")
 
 type Mount struct {
-	fs *file.FileStore
-	fm *file.FileManager
+	fs *file.Store
+	fm *file.Manager
 	bs blockstore.Blockstore
 }
 
 var _ blockstore.Blockstore = (*Mount)(nil)
 
-func NewMount(fs *file.FileStore, fm *file.FileManager, bs blockstore.Blockstore) *Mount {
+func NewMount(fs *file.Store, fm *file.Manager, bs blockstore.Blockstore) *Mount {
 	return &Mount{
 		fs: fs,
 		fm: fm,

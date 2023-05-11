@@ -3,10 +3,10 @@ package p2p
 import (
 	"time"
 
-	ipns "github.com/ipfs/boxo/ipns"
+	"github.com/ipfs/boxo/ipns"
 	ipns_pb "github.com/ipfs/boxo/ipns/pb"
 	"github.com/ipfs/go-cid"
-	crypto "github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/crypto"
 )
 
 func AddIPNS(cid *cid.Cid, name string) (*ipns_pb.IpnsEntry, error) {
