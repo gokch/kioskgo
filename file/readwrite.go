@@ -17,7 +17,9 @@ func (r *Reader) Get() ([]byte, error) {
 	return r.GetBlock(0, 0)
 }
 
-func (r *Reader) GetBlock(offset, size int) ([]byte, error) {
+func (r *Reader) GetBlock(offset, size int64) ([]byte, error) {
+	var err error
+
 	file, ok := r.Node.(*files.ReaderFile)
 	if ok != true {
 		return nil, errors.New("cannot read block from directory")
@@ -27,11 +29,10 @@ func (r *Reader) GetBlock(offset, size int) ([]byte, error) {
 		offset = 0
 	}
 	if size <= 0 {
-		s, err := file.Size()
+		size, err = file.Size()
 		if err != nil {
 			return nil, err
 		}
-		size = int(s)
 	}
 
 	if _, err := file.Seek(int64(offset), io.SeekStart); err != nil {

@@ -22,16 +22,16 @@ func NewFileManager() *Manager {
 }
 
 // PutNode writes the given node to the file manager.
-func (fm *Manager) PutNode(nd format.Node, path string, blockSize int) {
+func (fm *Manager) PutNode(nd format.Node, path string, blockSize int64) {
 	size, _ := nd.Size()
-	fm.Put(nd.Cid(), path, 0, int(size)) // put root cid
-	for i, link := range nd.Links() {    // put link cidMapper
-		fm.Put(link.Cid, filepath.Join(path, link.Name), i*blockSize, blockSize)
+	fm.Put(nd.Cid(), path, 0, int64(size)) // put root cid
+	for i, link := range nd.Links() {      // put link cidMapper
+		fm.Put(link.Cid, filepath.Join(path, link.Name), int64(i)*blockSize, blockSize)
 	}
 }
 
 // Put writes the given CID and file information to the file manager.
-func (fm *Manager) Put(ci cid.Cid, path string, offset, size int) {
+func (fm *Manager) Put(ci cid.Cid, path string, offset, size int64) {
 	// add cidMapper
 	fm.cidMapper[ci] = NewFileInfo(ci, path, offset, size)
 }
@@ -63,13 +63,13 @@ type FileInfo struct {
 	// Ci is the CID of the file.
 	Ci cid.Cid
 	// Offset is the offset of the file in the file system.
-	Offset int
+	Offset int64
 	// Size is the size of the file.
-	Size int
+	Size int64
 }
 
 // NewFileInfo creates a new FileInfo struct.
-func NewFileInfo(ci cid.Cid, path string, offset, size int) *FileInfo {
+func NewFileInfo(ci cid.Cid, path string, offset, size int64) *FileInfo {
 	return &FileInfo{
 		Path:   path,
 		Ci:     ci,

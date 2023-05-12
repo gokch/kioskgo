@@ -157,7 +157,7 @@ func (f *Mount) GetSize(ctx context.Context, c cid.Cid) (int, error) {
 	if err != nil {
 		if ipld.IsNotFound(err) {
 			fi := f.fm.Get(c)
-			return fi.Size, nil
+			return int(fi.Size), nil
 		}
 		return -1, err
 	}

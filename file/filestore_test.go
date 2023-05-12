@@ -41,7 +41,7 @@ func TestStoreFolder(t *testing.T) {
 	fs := NewFileStore("rootpath")
 	require.NotNil(t, fs)
 
-	data1 := []byte("test")
+	data1 := []byte("testtest")
 	err := fs.Put(ctx, "test/abc/d/e.txt", NewWriterFromBytes(data1))
 	require.NoError(t, err)
 	err = fs.Put(ctx, "test/abc/d/f.txt", NewWriterFromBytes(data1))

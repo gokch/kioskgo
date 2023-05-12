@@ -67,8 +67,8 @@ func NewDag(ctx context.Context, blockSize int, mount *Mount, rem exchange.Inter
 	return Dag, nil
 }
 
-func (d *Dag) Download(ctx context.Context, cidstr string, path string) error {
-	ci, err := cid.Parse(cidstr)
+func (d *Dag) Download(ctx context.Context, c string, path string) error {
+	ci, err := cid.Parse(c)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,11 @@ func (d *Dag) Download(ctx context.Context, cidstr string, path string) error {
 	}
 
 	// put cids in fm
-	d.mount.fm.PutNode(nd, path, d.blockSize)
+	size, err := nd.Size()
+	if err != nil {
+		return err
+	}
+	d.mount.fm.PutNode(nd, path, int64(size))
 
 	unixFSNode, err := unixfile.NewUnixfsFile(ctx, d.Dag.Dagserv, nd)
 	if err != nil {
@@ -130,7 +134,7 @@ func (d *Dag) Upload(ctx context.Context, path string, reader *file.Reader) (cid
 	}
 
 	// put cids in fm
-	d.mount.fm.PutNode(nd, path, d.blockSize)
+	d.mount.fm.PutNode(nd, path, int64(d.blockSize))
 
 	return nd.Cid(), nil
 }
