@@ -14,7 +14,6 @@ import (
 	"github.com/ipfs/go-cid"
 	chunk "github.com/ipfs/go-ipfs-chunker"
 	ipld "github.com/ipfs/go-ipld-format"
-	"github.com/multiformats/go-multicodec"
 )
 
 // Dag dag to fileStore
@@ -35,15 +34,11 @@ func NewDag(ctx context.Context, blockSize int, mount *Mount, rem exchange.Inter
 	// make dag service, save dht blocks
 	// Create a UnixFS graph from our file, parameters described here but can be visualized at https://dag.ipfs.tech/
 	builder := &uih.DagBuilderParams{
-		Maxlinks:  1024 * uih.DefaultLinksPerBlock, // Default max of 174 links per block
-		RawLeaves: true,                            // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
-		CidBuilder: cid.V1Builder{ // Use CIDv1 for all links
-			Codec:    uint64(multicodec.DagPb),
-			MhType:   uint64(multicodec.Sha3_256), // Use SHA3-256 as the hash function
-			MhLength: -1,                          // Use the default hash length for the given hash function (in this case 256 bits)
-		},
-		Dagserv: merkledag.NewDAGService(blockservice.New(mount, rem)),
-		NoCopy:  false,
+		Maxlinks:   1024 * uih.DefaultLinksPerBlock, // Default max of 174 links per block
+		RawLeaves:  true,                            // Leave the actual file bytes untouched instead of wrapping them in a dag-pb protobuf wrapper
+		CidBuilder: cidBuilder,
+		Dagserv:    merkledag.NewDAGService(blockservice.New(mount, rem)),
+		NoCopy:     false,
 	}
 
 	Dag := &Dag{
@@ -118,12 +113,12 @@ func (d *Dag) Upload(ctx context.Context, path string, reader *file.Reader) (cid
 	}
 
 	var nd ipld.Node
-	switch data := reader.Node.(type) {
+	switch n := reader.Node.(type) {
 	case files.Directory:
-		// TODO
+
 	case *files.ReaderFile:
 		// put reader in dag
-		ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(data, int64(d.blockSize)))
+		ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(n, int64(d.blockSize)))
 		if err != nil {
 			return cid.Cid{}, err
 		}

@@ -34,7 +34,7 @@ func TestStoreNewGet(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestStoreFolder(t *testing.T) {
+func TestStoreDirectory(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -52,6 +52,8 @@ func TestStoreFolder(t *testing.T) {
 	// get folder
 	reader, err := fs.Get(ctx, "test/abc/d")
 	require.NoError(t, err)
+
+	fmt.Printf("%T\n", reader.Node)
 
 	// put folder
 	err = fs.Put(ctx, "new", NewWriter(reader.Node))
