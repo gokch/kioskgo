@@ -12,20 +12,20 @@ import (
 )
 
 type Client struct {
-	client rpcconnect.ClientServiceClient
+	service rpcconnect.ClientServiceClient
 }
 
 func NewClient(addr string) *Client {
 	return &Client{
-		client: rpcconnect.NewClientServiceClient(http.DefaultClient, addr),
+		service: rpcconnect.NewClientServiceClient(http.DefaultClient, addr),
 	}
 }
 
 func main() {
 	ctx := context.Background()
 
-	client := NewClient("http://localhost:9876")
-	resp, err := client.client.Connect(ctx, connect.NewRequest(&rpc.ConnectRequest{
+	client := NewClient("http://localhost:8876")
+	resp, err := client.service.Connect(ctx, connect.NewRequest(&rpc.ConnectRequest{
 		Peers: []*rpc.Peer{
 			{
 				Peerid: "",
@@ -38,7 +38,7 @@ func main() {
 	}
 	fmt.Println(resp.Msg)
 
-	resp2, err := client.client.Download(ctx, connect.NewRequest(&rpc.DownloadRequest{
+	resp2, err := client.service.Download(ctx, connect.NewRequest(&rpc.DownloadRequest{
 		Files: []*rpc.File{
 			{
 				Cid:  "",

@@ -37,6 +37,8 @@ message DisconnectRequest {
 
 message DisconnectResponse {
     Response response = 1;
+    repeated Peer succeed = 2;
+    repeated Peer failed = 3;
 }
 
 message IsConnectRequest {
@@ -64,6 +66,16 @@ message DownloadRequest {
 }
 
 message DownloadResponse {
+    Response response = 1;
+    repeated File succeed = 2;
+    repeated File failed = 3;
+}
+
+message DownloadPathRequest {
+    File file = 1;
+}
+
+message DownloadPathResponse {
     Response response = 1;
     repeated File succeed = 2;
     repeated File failed = 3;

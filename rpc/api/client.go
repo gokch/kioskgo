@@ -41,12 +41,46 @@ func (c *ClientServiceApi) Connect(ctx context.Context, req *connect.Request[rpc
 	return connect.NewResponse(conResp), nil
 }
 
-func (c *ClientServiceApi) Disconnect(context.Context, *connect.Request[rpc.DisconnectRequest]) (*connect.Response[rpc.DisconnectResponse], error) {
-	return nil, nil
+func (c *ClientServiceApi) Disconnect(ctx context.Context, req *connect.Request[rpc.DisconnectRequest]) (*connect.Response[rpc.DisconnectResponse], error) {
+	disconn := make([]*rpc.Peer, 0, 10)
+	undisconn := make([]*rpc.Peer, 0, 10)
+
+	for _, peer := range req.Msg.Peers {
+		if err := c.client.Disconnect(ctx, peer.GetPeerid()); err != nil {
+			undisconn = append(undisconn, peer)
+		} else {
+			disconn = append(disconn, peer)
+		}
+	}
+	conResp := &rpc.DisconnectResponse{
+		Response: &rpc.Response{},
+		Succeed:  disconn,
+		Failed:   undisconn,
+	}
+
+	return connect.NewResponse(conResp), nil
 }
 
-func (c *ClientServiceApi) IsConnect(context.Context, *connect.Request[rpc.IsConnectRequest]) (*connect.Response[rpc.IsConnectResponse], error) {
-	return nil, nil
+func (c *ClientServiceApi) IsConnect(ctx context.Context, req *connect.Request[rpc.IsConnectRequest]) (*connect.Response[rpc.IsConnectResponse], error) {
+	conn := make([]*rpc.Peer, 0, 10)
+	unconn := make([]*rpc.Peer, 0, 10)
+
+	conns := c.client.IsConnect(ctx)
+	for _, con := range req.Msg.Peers {
+		if _, ok := conns[con.GetPeerid()]; ok {
+			conn = append(conn, con)
+		} else {
+			unconn = append(unconn, con)
+		}
+	}
+
+	conResp := &rpc.IsConnectResponse{
+		Response:   &rpc.Response{},
+		Connects:   conn,
+		Unconnects: unconn,
+	}
+
+	return connect.NewResponse(conResp), nil
 }
 
 func (c *ClientServiceApi) Upload(ctx context.Context, req *connect.Request[rpc.UploadRequest]) (*connect.Response[rpc.UploadResponse], error) {

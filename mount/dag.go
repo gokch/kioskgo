@@ -115,14 +115,15 @@ func (d *Dag) Upload(ctx context.Context, path string, reader *file.Reader) (cid
 	var nd ipld.Node
 	switch n := reader.Node.(type) {
 	case files.Directory:
-
+		// not support now
+		return cid.Cid{}, nil
 	case *files.ReaderFile:
 		// put reader in dag
 		ufsBuilder, err := d.Dag.New(chunk.NewSizeSplitter(n, int64(d.blockSize)))
 		if err != nil {
 			return cid.Cid{}, err
 		}
-		nd, err = trickle.Layout(ufsBuilder) // Arrange the graph with a balanced layout
+		nd, err = trickle.Layout(ufsBuilder) // Arrange the graph with a trickle layout
 		if err != nil {
 			return cid.Cid{}, err
 		}

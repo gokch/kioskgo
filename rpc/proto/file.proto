@@ -10,5 +10,6 @@ message File {
 }
 
 message Metadata {
-    string comment = 1;
+    string name = 1;
+    string comment = 2;
 }

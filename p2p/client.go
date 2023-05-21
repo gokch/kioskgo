@@ -30,10 +30,14 @@ type ClientConfig struct {
 	SizeWorker int
 	// ExpireSec is the number of seconds to keep a file in the cache before it is evicted.
 	ExpireSec int
+
+	IsServer bool
 }
 
 // Client is a peer-to-peer client that can connect to other peers in the network, download and upload files, and manage its own connections.
 type Client struct {
+	IsServer bool
+
 	// dag is the dag mount.
 	dag *mount.Dag
 	// mq is the ants pool.
@@ -82,8 +86,9 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	}
 
 	c := &Client{
-		dag: dag,
-		mq:  mq,
+		IsServer: cfg.IsServer,
+		dag:      dag,
+		mq:       mq,
 
 		host:  host,
 		bswap: bswap,
@@ -122,6 +127,15 @@ func (c *Client) Disconnect(ctx context.Context, targetPeer string) error {
 		return err
 	}
 	return c.host.Network().ClosePeer(addrInfo.ID)
+}
+
+// Connect connects the client to a peer.
+func (c *Client) IsConnect(ctx context.Context) map[string]bool {
+	conns := make(map[string]bool)
+	for _, conn := range c.host.Network().Conns() {
+		conns[conn.ID()] = true
+	}
+	return conns
 }
 
 // Close closes the client.
