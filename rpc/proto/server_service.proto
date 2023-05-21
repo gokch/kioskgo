@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "/rpc";
+
+import "file.proto";
+import "peer.proto";
+
+
+// TODO Server
+service ServerService {
+    rpc Register(ConnectRequest) returns (ConnectResponse) {}
+    rpc FindAndProvide(ConnectRequest) returns (ConnectResponse) {}
+}
