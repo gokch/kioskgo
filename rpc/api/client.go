@@ -83,6 +83,13 @@ func (c *ClientServiceApi) IsConnect(ctx context.Context, req *connect.Request[r
 	return connect.NewResponse(conResp), nil
 }
 
+// TODO
+func (c *ClientServiceApi) Query(ctx context.Context, req *connect.Request[rpc.QueryRequest]) (*connect.Response[rpc.QueryResponse], error) {
+
+	queryResp := &rpc.QueryResponse{}
+	return connect.NewResponse(queryResp), nil
+}
+
 func (c *ClientServiceApi) Upload(ctx context.Context, req *connect.Request[rpc.UploadRequest]) (*connect.Response[rpc.UploadResponse], error) {
 	succeed := make([]*rpc.File, 0, 10)
 	failed := make([]*rpc.File, 0, 10)

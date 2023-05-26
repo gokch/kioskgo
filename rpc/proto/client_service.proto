@@ -11,6 +11,7 @@ service ClientService {
     rpc Disconnect(DisconnectRequest) returns (DisconnectResponse) {}
     rpc IsConnect(IsConnectRequest) returns (IsConnectResponse) {}
 
+    rpc Query(QueryRequest) returns (QueryResponse) {}
     rpc Upload(UploadRequest) returns (UploadResponse) {}
     rpc Download(DownloadRequest) returns (DownloadResponse) {}
 }
@@ -49,6 +50,16 @@ message IsConnectResponse {
     Response response = 1;
     repeated Peer connects = 2;
     repeated Peer unconnects = 3;
+}
+
+message QueryRequest {
+    repeated Peer peers = 1;
+    repeated string cids = 2;
+}
+
+message QueryResponse {
+    Response response = 1;
+    repeated File Match = 2;
 }
 
 message UploadRequest {

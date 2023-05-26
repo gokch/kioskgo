@@ -40,6 +40,8 @@ const (
 	ClientServiceDisconnectProcedure = "/proto.ClientService/Disconnect"
 	// ClientServiceIsConnectProcedure is the fully-qualified name of the ClientService's IsConnect RPC.
 	ClientServiceIsConnectProcedure = "/proto.ClientService/IsConnect"
+	// ClientServiceQueryProcedure is the fully-qualified name of the ClientService's Query RPC.
+	ClientServiceQueryProcedure = "/proto.ClientService/Query"
 	// ClientServiceUploadProcedure is the fully-qualified name of the ClientService's Upload RPC.
 	ClientServiceUploadProcedure = "/proto.ClientService/Upload"
 	// ClientServiceDownloadProcedure is the fully-qualified name of the ClientService's Download RPC.
@@ -51,6 +53,7 @@ type ClientServiceClient interface {
 	Connect(context.Context, *connect_go.Request[rpc.ConnectRequest]) (*connect_go.Response[rpc.ConnectResponse], error)
 	Disconnect(context.Context, *connect_go.Request[rpc.DisconnectRequest]) (*connect_go.Response[rpc.DisconnectResponse], error)
 	IsConnect(context.Context, *connect_go.Request[rpc.IsConnectRequest]) (*connect_go.Response[rpc.IsConnectResponse], error)
+	Query(context.Context, *connect_go.Request[rpc.QueryRequest]) (*connect_go.Response[rpc.QueryResponse], error)
 	Upload(context.Context, *connect_go.Request[rpc.UploadRequest]) (*connect_go.Response[rpc.UploadResponse], error)
 	Download(context.Context, *connect_go.Request[rpc.DownloadRequest]) (*connect_go.Response[rpc.DownloadResponse], error)
 }
@@ -80,6 +83,11 @@ func NewClientServiceClient(httpClient connect_go.HTTPClient, baseURL string, op
 			baseURL+ClientServiceIsConnectProcedure,
 			opts...,
 		),
+		query: connect_go.NewClient[rpc.QueryRequest, rpc.QueryResponse](
+			httpClient,
+			baseURL+ClientServiceQueryProcedure,
+			opts...,
+		),
 		upload: connect_go.NewClient[rpc.UploadRequest, rpc.UploadResponse](
 			httpClient,
 			baseURL+ClientServiceUploadProcedure,
@@ -98,6 +106,7 @@ type clientServiceClient struct {
 	connect    *connect_go.Client[rpc.ConnectRequest, rpc.ConnectResponse]
 	disconnect *connect_go.Client[rpc.DisconnectRequest, rpc.DisconnectResponse]
 	isConnect  *connect_go.Client[rpc.IsConnectRequest, rpc.IsConnectResponse]
+	query      *connect_go.Client[rpc.QueryRequest, rpc.QueryResponse]
 	upload     *connect_go.Client[rpc.UploadRequest, rpc.UploadResponse]
 	download   *connect_go.Client[rpc.DownloadRequest, rpc.DownloadResponse]
 }
@@ -117,6 +126,11 @@ func (c *clientServiceClient) IsConnect(ctx context.Context, req *connect_go.Req
 	return c.isConnect.CallUnary(ctx, req)
 }
 
+// Query calls proto.ClientService.Query.
+func (c *clientServiceClient) Query(ctx context.Context, req *connect_go.Request[rpc.QueryRequest]) (*connect_go.Response[rpc.QueryResponse], error) {
+	return c.query.CallUnary(ctx, req)
+}
+
 // Upload calls proto.ClientService.Upload.
 func (c *clientServiceClient) Upload(ctx context.Context, req *connect_go.Request[rpc.UploadRequest]) (*connect_go.Response[rpc.UploadResponse], error) {
 	return c.upload.CallUnary(ctx, req)
@@ -132,6 +146,7 @@ type ClientServiceHandler interface {
 	Connect(context.Context, *connect_go.Request[rpc.ConnectRequest]) (*connect_go.Response[rpc.ConnectResponse], error)
 	Disconnect(context.Context, *connect_go.Request[rpc.DisconnectRequest]) (*connect_go.Response[rpc.DisconnectResponse], error)
 	IsConnect(context.Context, *connect_go.Request[rpc.IsConnectRequest]) (*connect_go.Response[rpc.IsConnectResponse], error)
+	Query(context.Context, *connect_go.Request[rpc.QueryRequest]) (*connect_go.Response[rpc.QueryResponse], error)
 	Upload(context.Context, *connect_go.Request[rpc.UploadRequest]) (*connect_go.Response[rpc.UploadResponse], error)
 	Download(context.Context, *connect_go.Request[rpc.DownloadRequest]) (*connect_go.Response[rpc.DownloadResponse], error)
 }
@@ -156,6 +171,11 @@ func NewClientServiceHandler(svc ClientServiceHandler, opts ...connect_go.Handle
 	mux.Handle(ClientServiceIsConnectProcedure, connect_go.NewUnaryHandler(
 		ClientServiceIsConnectProcedure,
 		svc.IsConnect,
+		opts...,
+	))
+	mux.Handle(ClientServiceQueryProcedure, connect_go.NewUnaryHandler(
+		ClientServiceQueryProcedure,
+		svc.Query,
 		opts...,
 	))
 	mux.Handle(ClientServiceUploadProcedure, connect_go.NewUnaryHandler(
@@ -184,6 +204,10 @@ func (UnimplementedClientServiceHandler) Disconnect(context.Context, *connect_go
 
 func (UnimplementedClientServiceHandler) IsConnect(context.Context, *connect_go.Request[rpc.IsConnectRequest]) (*connect_go.Response[rpc.IsConnectResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("proto.ClientService.IsConnect is not implemented"))
+}
+
+func (UnimplementedClientServiceHandler) Query(context.Context, *connect_go.Request[rpc.QueryRequest]) (*connect_go.Response[rpc.QueryResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("proto.ClientService.Query is not implemented"))
 }
 
 func (UnimplementedClientServiceHandler) Upload(context.Context, *connect_go.Request[rpc.UploadRequest]) (*connect_go.Response[rpc.UploadResponse], error) {
