@@ -26,8 +26,15 @@ require (
 )
 
 require (
+	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/alecthomas/units v0.0.0-20210927113745-59d0afb8317a // indirect
+	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/dgraph-io/badger/v2 v2.2007.3 // indirect
+	github.com/dgraph-io/ristretto v0.0.3-0.20200630154024-f66de99634de // indirect
+	github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2 // indirect
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gammazero/deque v0.2.1 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/ipfs/go-bitfield v1.1.0 // indirect
 	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
 	github.com/ipfs/go-ipfs-pq v0.0.3 // indirect
@@ -74,6 +81,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.1.2
+	github.com/ipfs/go-ds-badger2 v0.1.3
 	github.com/ipfs/go-ipfs-delay v0.0.1 // indirect
 	github.com/ipfs/go-ipfs-util v0.0.2 // indirect
 	github.com/ipfs/go-ipld-format v0.4.0
