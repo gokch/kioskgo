@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/gokch/ipfs_mount/p2p"
+	"github.com/gokch/ipfs_mount/rpc"
 )
 
 var (
@@ -71,6 +72,7 @@ func rootRun(cmd *cobra.Command, args []string) {
 	logger.Info("start cli")
 
 	client, err := p2p.NewClient(context.Background(), &p2p.ClientConfig{
+		Role:       rpc.Role_DOWNLOADER,
 		RootPath:   rootPath,
 		Peers:      peerIds,
 		SizeWorker: int(workerSize),

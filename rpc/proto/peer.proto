@@ -5,4 +5,12 @@ option go_package = "/rpc";
 
 message Peer {
     string peerid = 1;
+    Role role = 2;
+}
+
+enum Role {
+    UNSPECIFIED = 0;
+    DOWNLOADER = 1;
+    UPLOADER = 2;
+    SERVER = 3;
 }

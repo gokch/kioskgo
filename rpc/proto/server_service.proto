@@ -9,6 +9,24 @@ import "peer.proto";
 
 // TODO Server
 service ServerService {
-    rpc Register(ConnectRequest) returns (ConnectResponse) {}
-    rpc FindAndProvide(ConnectRequest) returns (ConnectResponse) {}
+    rpc Register(RegisterRequest) returns (RegisterResponse) {}
+    rpc FindAndProvide(FindAndProvideRequest) returns (FindAndProvideResponse) {}
+}
+
+message RegisterRequest {
+    repeated Peer peers = 1;
+}
+
+message RegisterResponse {
+    repeated Peer succeed = 1;
+    repeated Peer failed = 2;
+}
+
+message FindAndProvideRequest {
+    repeated Peer peers = 1;
+}
+
+message FindAndProvideResponse {
+    repeated Peer succeed = 1;
+    repeated Peer failed = 2;
 }

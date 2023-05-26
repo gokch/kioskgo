@@ -6,6 +6,7 @@ import (
 
 	"github.com/gokch/ipfs_mount/file"
 	"github.com/gokch/ipfs_mount/mount"
+	"github.com/gokch/ipfs_mount/rpc"
 	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	dsync "github.com/ipfs/go-datastore/sync"
@@ -31,12 +32,12 @@ type ClientConfig struct {
 	// ExpireSec is the number of seconds to keep a file in the cache before it is evicted.
 	ExpireSec int
 
-	IsServer bool
+	Role rpc.Role
 }
 
 // Client is a peer-to-peer client that can connect to other peers in the network, download and upload files, and manage its own connections.
 type Client struct {
-	IsServer bool
+	Role rpc.Role
 
 	// dag is the dag mount.
 	dag *mount.Dag
@@ -86,9 +87,9 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	}
 
 	c := &Client{
-		IsServer: cfg.IsServer,
-		dag:      dag,
-		mq:       mq,
+		Role: cfg.Role,
+		dag:  dag,
+		mq:   mq,
 
 		host:  host,
 		bswap: bswap,

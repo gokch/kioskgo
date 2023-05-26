@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gokch/ipfs_mount/p2p"
+	"github.com/gokch/ipfs_mount/rpc"
 	"github.com/gokch/ipfs_mount/rpc/api"
 	"github.com/spf13/cobra"
 )
@@ -46,6 +47,7 @@ func main() {
 
 func rootRun(cmd *cobra.Command, args []string) {
 	client, err := p2p.NewClient(cmd.Context(), &p2p.ClientConfig{
+		Role:       rpc.Role_SERVER,
 		RootPath:   rootPath,
 		Peers:      peerIds,
 		SizeWorker: int(workerSize),
