@@ -3,7 +3,6 @@ package mount
 import (
 	"context"
 
-	"github.com/gokch/ipfs_mount/file"
 	blockstore "github.com/ipfs/boxo/blockstore"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
@@ -11,6 +10,7 @@ import (
 	posinfo "github.com/ipfs/go-ipfs-posinfo"
 	ipld "github.com/ipfs/go-ipld-format"
 	logging "github.com/ipfs/go-log"
+	"github.com/rabbitprincess/ipfs_mount/file"
 )
 
 var logger = logging.Logger("mount")

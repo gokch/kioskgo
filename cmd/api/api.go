@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gokch/ipfs_mount/p2p"
-	"github.com/gokch/ipfs_mount/rpc"
-	"github.com/gokch/ipfs_mount/rpc/api"
+	"github.com/rabbitprincess/ipfs_mount/p2p"
+	"github.com/rabbitprincess/ipfs_mount/rpc"
+	"github.com/rabbitprincess/ipfs_mount/rpc/api"
 	"github.com/spf13/cobra"
 )
 

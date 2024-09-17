@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gokch/ipfs_mount/file"
 	"github.com/ipfs/boxo/exchange/offline"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	"github.com/rabbitprincess/ipfs_mount/file"
 	"github.com/stretchr/testify/require"
 )
 

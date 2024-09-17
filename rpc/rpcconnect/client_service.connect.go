@@ -8,7 +8,7 @@ import (
 	context "context"
 	errors "errors"
 	connect_go "github.com/bufbuild/connect-go"
-	rpc "github.com/gokch/ipfs_mount/rpc"
+	rpc "github.com/rabbitprincess/ipfs_mount/rpc"
 	http "net/http"
 	strings "strings"
 )

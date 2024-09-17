@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/gokch/ipfs_mount/rpc"
-	"github.com/gokch/ipfs_mount/rpc/rpcconnect"
+	"github.com/rabbitprincess/ipfs_mount/rpc"
+	"github.com/rabbitprincess/ipfs_mount/rpc/rpcconnect"
 )
 
 type Client struct {

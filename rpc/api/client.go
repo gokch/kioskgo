@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/gokch/ipfs_mount/p2p"
-	"github.com/gokch/ipfs_mount/rpc"
-	"github.com/gokch/ipfs_mount/rpc/rpcconnect"
+	"github.com/rabbitprincess/ipfs_mount/p2p"
+	"github.com/rabbitprincess/ipfs_mount/rpc"
+	"github.com/rabbitprincess/ipfs_mount/rpc/rpcconnect"
 )
 
 var _ rpcconnect.ClientServiceClient = (*ClientServiceApi)(nil)

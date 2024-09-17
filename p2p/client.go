@@ -4,9 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/gokch/ipfs_mount/file"
-	"github.com/gokch/ipfs_mount/mount"
-	"github.com/gokch/ipfs_mount/rpc"
 	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	dsync "github.com/ipfs/go-datastore/sync"
@@ -15,6 +12,9 @@ import (
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/panjf2000/ants"
+	"github.com/rabbitprincess/ipfs_mount/file"
+	"github.com/rabbitprincess/ipfs_mount/mount"
+	"github.com/rabbitprincess/ipfs_mount/rpc"
 )
 
 var (

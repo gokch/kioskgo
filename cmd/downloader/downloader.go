@@ -11,8 +11,8 @@ import (
 	"github.com/ipfs/go-log"
 	"github.com/spf13/cobra"
 
-	"github.com/gokch/ipfs_mount/p2p"
-	"github.com/gokch/ipfs_mount/rpc"
+	"github.com/rabbitprincess/ipfs_mount/p2p"
+	"github.com/rabbitprincess/ipfs_mount/rpc"
 )
 
 var (

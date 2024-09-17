@@ -3,7 +3,6 @@ package mount
 import (
 	"context"
 
-	"github.com/gokch/ipfs_mount/file"
 	"github.com/ipfs/boxo/blockservice"
 	"github.com/ipfs/boxo/exchange"
 	"github.com/ipfs/boxo/files"
@@ -14,6 +13,7 @@ import (
 	"github.com/ipfs/go-cid"
 	chunk "github.com/ipfs/go-ipfs-chunker"
 	ipld "github.com/ipfs/go-ipld-format"
+	"github.com/rabbitprincess/ipfs_mount/file"
 )
 
 // Dag dag to fileStore

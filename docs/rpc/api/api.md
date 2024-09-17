@@ -1,7 +1,7 @@
 # Package api
 
 Package api provides a client service API for the ipfs_mount project.\
-API methods are defined at [rpc/proto/client_service.proto](https://github.com/gokch/ipfs-mount/blob/main/rpc/proto/client_service.proto) also
+API methods are defined at [rpc/proto/client_service.proto](https://github.com/rabbitprincess/ipfs-mount/blob/main/rpc/proto/client_service.proto) also
 
 ## ClientServiceApi struct
 

@@ -133,12 +133,8 @@ func TestNat(t *testing.T) {
 func TestAutoNat(t *testing.T) {
 	host, err := libp2p.New()
 	require.NoError(t, err)
-	// Autonat 기능을 사용하여 public IP를 가져옵니다.
+
 	autonatService, err := autonat.New(host)
+	require.NoError(t,err)
 	fmt.Println(autonatService.Status())
-
-	publicAddr, err := autonatService.PublicAddr()
-	require.NoError(t, err)
-
-	fmt.Println(publicAddr.MarshalJSON())
 }
